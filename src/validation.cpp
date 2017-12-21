@@ -6,6 +6,7 @@
 #include "validation.h"
 
 #include "arith_uint256.h"
+#include "base58.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -1573,7 +1574,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
-    if (pindexPrev->nHeight + 1 >= params.hardforkHeight) {
+    if (pindexPrev && pindexPrev->nHeight + 1 >= params.hardforkHeight) {
         nVersion |= VERSIONBITS_BITCOINX;
     }
 
@@ -1831,12 +1832,26 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
+    auto isPremineBlock = pindex->nHeight == chainparams.GetConsensus().hardforkHeight;
+    auto premineValue = chainparams.GetConsensus().premineValue;
+
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+    if (isPremineBlock) blockReward += premineValue;
     if (block.vtx[0]->GetValueOut() > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
                                block.vtx[0]->GetValueOut(), blockReward),
                                REJECT_INVALID, "bad-cb-amount");
+
+    // Check premine tx-out at hardfork height
+    const auto& coinbaseVouts = block.vtx[0]->vout;
+    if (isPremineBlock) {
+        const auto it = std::find(
+            coinbaseVouts.cbegin(), coinbaseVouts.cend(),
+            CTxOut(premineValue, GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get())));
+        if (it == coinbaseVouts.cend())
+            return state.DoS(100, error("ConnectBlock(): coinbase has no premine", REJECT_INVALID, "bad-cb-no-premine"));
+    }
 
     if (!control.Wait())
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
@@ -4173,8 +4188,6 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
         if (pindex->pprev != nullptr && pindexFirstNotScriptsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS) pindexFirstNotScriptsValid = pindex;
 
         // Begin: actual consistency checks.
-        // Check hardfork version
-        assert(pindex->nHeight >= consensusParams.hardforkHeight && pindex->IsBitcoinX());
         if (pindex->pprev == nullptr) {
             // Genesis block checks.
             assert(pindex->GetBlockHash() == consensusParams.hashGenesisBlock); // Genesis block's hash must match.
@@ -4197,6 +4210,9 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
         assert((pindexFirstNeverProcessed != nullptr) == (pindex->nChainTx == 0)); // nChainTx != 0 is used to signal that all parent blocks have been processed (but may have been pruned).
         assert((pindexFirstNotTransactionsValid != nullptr) == (pindex->nChainTx == 0));
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
+        // Check hardfork version
+        if (pindex->nHeight >= consensusParams.hardforkHeight)
+            assert(pindex->IsBitcoinX());
         assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
         assert(pindexFirstNotTreeValid == nullptr); // All mapBlockIndex entries must at least be TREE valid

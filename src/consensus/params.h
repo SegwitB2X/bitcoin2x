@@ -7,6 +7,7 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include "uint256.h"
+#include "amount.h"
 #include <map>
 #include <string>
 
@@ -65,8 +66,9 @@ struct Params {
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 
-    /** Block height at which X11 and DGW becomes active */
     int hardforkHeight;
+    std::string premineAddress;
+    CAmount premineValue;
 };
 } // namespace Consensus
 

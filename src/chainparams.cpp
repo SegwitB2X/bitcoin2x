@@ -107,6 +107,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x0000000000000000003b9ce759c2a087d52abc4266f8f4ebd6d768b89defa50a"); //477890
 
         consensus.hardforkHeight = 501451;
+        consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
+        consensus.premineValue = 2000000 * COIN;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -223,6 +225,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
         consensus.hardforkHeight = 1200000;
+        consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
+        consensus.premineValue = 2000000 * COIN;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -314,6 +318,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.hardforkHeight = 100;
+        consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
+        consensus.premineValue = 2000000 * COIN;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
