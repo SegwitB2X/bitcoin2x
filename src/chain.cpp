@@ -143,7 +143,9 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
+    const auto powTargetSpacing = from.nHeight >= params.hardforkHeight
+        ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
+    r = r * arith_uint256(powTargetSpacing) / GetBlockProof(tip);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }
