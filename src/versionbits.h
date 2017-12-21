@@ -17,6 +17,8 @@ static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
 
+static const int32_t VERSIONBITS_BITCOINX = 1 << 27;
+
 enum ThresholdState {
     THRESHOLD_DEFINED,
     THRESHOLD_STARTED,

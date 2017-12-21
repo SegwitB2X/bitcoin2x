@@ -66,6 +66,8 @@ public:
     {
         return (int64_t)nTime;
     }
+
+    bool IsBitcoinX() const;
 };
 
 

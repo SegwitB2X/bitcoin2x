@@ -81,7 +81,8 @@ public:
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -99,6 +100,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
+        
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000723d3581fe1bd55373540a");
@@ -106,15 +111,25 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000000000000003b9ce759c2a087d52abc4266f8f4ebd6d768b89defa50a"); //477890
 
+        consensus.hardforkHeight = 501451;
+        consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
+        consensus.premineValue = 2000000 * COIN;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
+        pchBitcoinMessageStart[0] = 0xf9;
+        pchBitcoinMessageStart[1] = 0xbe;
+        pchBitcoinMessageStart[2] = 0xb4;
+        pchBitcoinMessageStart[3] = 0xd9;
+
+        pchMessageStart[0] = 0xf4;
+        pchMessageStart[1] = 0xb2;
+        pchMessageStart[2] = 0xb5;
+        pchMessageStart[3] = 0xd8;
+
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
 
@@ -185,7 +200,8 @@ public:
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
@@ -204,16 +220,30 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
+        consensus.hardforkHeight = 1200000;
+        consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
+        consensus.premineValue = 2000000 * COIN;
+
+        pchBitcoinMessageStart[0] = 0x0b;
+        pchBitcoinMessageStart[1] = 0x11;
+        pchBitcoinMessageStart[2] = 0x09;
+        pchBitcoinMessageStart[3] = 0x07;
+
+        pchMessageStart[0] = 0xf3;
+        pchMessageStart[1] = 0xb1;
+        pchMessageStart[2] = 0xb4;
+        pchMessageStart[3] = 0xd7;
+
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
 
@@ -272,7 +302,8 @@ public:
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
@@ -287,16 +318,30 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 0;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
+        consensus.hardforkHeight = 100;
+        consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
+        consensus.premineValue = 2000000 * COIN;
+
+        pchBitcoinMessageStart[0] = 0xfa;
+        pchBitcoinMessageStart[1] = 0xbf;
+        pchBitcoinMessageStart[2] = 0xb5;
+        pchBitcoinMessageStart[3] = 0xda;
+
+        pchMessageStart[0] = 0xf5;
+        pchMessageStart[1] = 0xb3;
+        pchMessageStart[2] = 0xb6;
+        pchMessageStart[3] = 0xd9;
+
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 

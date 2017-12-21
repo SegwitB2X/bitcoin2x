@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
+#include "versionbits.h"
 
 /**
  * CChain implementation
@@ -142,7 +143,9 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
+    const auto powTargetSpacing = from.nHeight >= params.hardforkHeight
+        ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
+    r = r * arith_uint256(powTargetSpacing) / GetBlockProof(tip);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }
@@ -166,4 +169,10 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
     // Eventually all chain branches meet at the genesis block.
     assert(pa == pb);
     return pa;
+}
+
+bool CBlockIndex::IsBitcoinX() const
+{
+    // Time is the end of CSV deployment
+    return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
 }
