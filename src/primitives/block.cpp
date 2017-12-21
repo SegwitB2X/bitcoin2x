@@ -9,10 +9,19 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
+#include "versionbits.h"
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return IsBitcoinX()
+        ? HashX11(BEGIN(nVersion), END(nNonce))
+        : SerializeHash(*this);
+}
+
+bool CBlockHeader::IsBitcoinX() const
+{
+    // Time is the end of CSV deployment
+    return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
 }
 
 std::string CBlock::ToString() const

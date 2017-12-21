@@ -1571,6 +1571,10 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
+    if (pindexPrev->nHeight + 1 >= params.hardforkHeight) {
+        nVersion |= VERSIONBITS_BITCOINX;
+    }
+
     return nVersion;
 }
 
@@ -2941,6 +2945,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
+
+    // Check hardfork version
+    if (nHeight >= Params().GetConsensus().hardforkHeight && !block.IsBitcoinX())
+        return state.DoS(0, false, REJECT_INVALID, "not-hardfork", false, "incorrect block version");
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
