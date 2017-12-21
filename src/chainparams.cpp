@@ -99,6 +99,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
+        
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000723d3581fe1bd55373540a");
@@ -215,8 +219,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
-        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 1199145601;
-        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 1230767999; // May 1st 2017
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
@@ -310,6 +314,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 0;
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
