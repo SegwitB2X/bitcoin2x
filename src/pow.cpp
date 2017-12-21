@@ -82,10 +82,12 @@ static unsigned int BitcoinNextWorkRequired(const CBlockIndex* pindexLast, const
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    if (params.fPowNoRetargeting) return pindexLast->nBits;
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
-    const auto isHardfork = pindexLast != nullptr && pindexLast->nHeight + 1 >= params.hardforkHeight;
+    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    if (pindexLast->nHeight + 1 == params.hardforkHeight) return nProofOfWorkLimit;
+    if (params.fPowNoRetargeting) return pindexLast->nBits;
+
+    const auto isHardfork = pindexLast->nHeight + 1 >= params.hardforkHeight;
     const auto difficultyAdjustmentInterval = isHardfork
         ? params.DifficultyAdjustmentInterval()
         : params.BitcoinDifficultyAdjustmentInterval();
