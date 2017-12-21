@@ -1292,7 +1292,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     CBlockHeader first_invalid_header;
     if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast, &first_invalid_header)) {
         int nDoS;
-        if (state.IsInvalid(nDoS)) {
+        if (pindexLast == nullptr && state.IsInvalid(nDoS)) {
             LOCK(cs_main);
             if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
@@ -2266,7 +2266,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CValidationState state;
         if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
             int nDoS;
-            if (state.IsInvalid(nDoS)) {
+            if (pindex == nullptr && state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
                     LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), nDoS);
