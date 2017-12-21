@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
+#include "versionbits.h"
 
 /**
  * CChain implementation
@@ -166,4 +167,10 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
     // Eventually all chain branches meet at the genesis block.
     assert(pa == pb);
     return pa;
+}
+
+bool CBlockIndex::IsBitcoinX() const
+{
+    // Time is the end of CSV deployment
+    return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
 }
