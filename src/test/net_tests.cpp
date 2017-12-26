@@ -64,10 +64,7 @@ public:
 CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
-    const auto messageStart = useFlexibleHandshake
-        ? Params().BitcoinMessageStart()
-        : Params().MessageStart();
-    ssPeersIn << FLATDATA(messageStart);
+    ssPeersIn << FLATDATA(Params().BitcoinMessageStart());
     ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
     std::vector<unsigned char> vchData(str.begin(), str.end());
