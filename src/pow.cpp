@@ -10,6 +10,8 @@
 #include "primitives/block.h"
 #include "uint256.h"
 
+static const int64_t DGWPastBlocksMax = 24;
+
 static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params, bool isHardfork) {
     /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
     const CBlockIndex *BlockLastSolved = pindexLast;
@@ -17,7 +19,7 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
-    int64_t PastBlocksMax = 24;
+    int64_t PastBlocksMax = DGWPastBlocksMax;
     int64_t CountBlocks = 0;
     arith_uint256 PastDifficultyAverage;
     arith_uint256 PastDifficultyAveragePrev;
@@ -84,7 +86,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexLast != nullptr);
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    if (pindexLast->nHeight + 1 == params.hardforkHeight) return nProofOfWorkLimit;
+    if (pindexLast->nHeight + 1 >= params.hardforkHeight &&
+        pindexLast->nHeight + 1 < params.hardforkHeight + DGWPastBlocksMax)
+        return nProofOfWorkLimit;
     if (params.fPowNoRetargeting) return pindexLast->nBits;
 
     const auto isHardfork = pindexLast->nHeight + 1 >= params.hardforkHeight;
