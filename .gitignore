@@ -2,9 +2,9 @@
 
 *.exe
 src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
+src/bitcoin2xd
+src/bitcoin2x-cli
+src/bitcoin2x-tx
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -74,7 +74,7 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
+bitcoin2x-qt
 Bitcoin-Qt.app
 
 # Unit-tests

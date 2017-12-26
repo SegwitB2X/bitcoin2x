@@ -45,7 +45,7 @@ class TestNode():
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
         if binary is None:
-            self.binary = os.getenv("BITCOIND", "bitcoind")
+            self.binary = os.getenv("BITCOIND", "bitcoin2xd")
         else:
             self.binary = binary
         self.stderr = stderr
@@ -54,7 +54,7 @@ class TestNode():
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
-        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
+        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin2x-cli"), self.datadir)
 
         self.running = False
         self.process = None
@@ -102,7 +102,7 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        raise AssertionError("Unable to connect to bitcoind")
+        raise AssertionError("Unable to connect to bitcoin2xd")
 
     def get_wallet_rpc(self, wallet_name):
         assert self.rpc_connected
