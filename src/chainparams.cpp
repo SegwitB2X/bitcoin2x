@@ -112,7 +112,7 @@ public:
         consensus.defaultAssumeValid = uint256S("0x0000000000000000003b9ce759c2a087d52abc4266f8f4ebd6d768b89defa50a"); //477890
 
         consensus.hardforkHeight = 501451;
-        consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
+        consensus.premineAddress = "3MVnY2kxMPUkxWYNoGjLBwb2uFnsxtjnvF";
         consensus.premineValue = 2000000 * COIN;
 
         /**
