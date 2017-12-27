@@ -113,7 +113,7 @@ public:
 
         consensus.hardforkHeight = 501451;
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -235,7 +235,7 @@ public:
 
         consensus.hardforkHeight = 1200000;
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -336,7 +336,7 @@ public:
 
         consensus.hardforkHeight = 1000;
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
