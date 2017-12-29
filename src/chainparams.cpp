@@ -113,7 +113,8 @@ public:
 
         consensus.hardforkHeight = 501451;
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 200000000000000000000000000000000000000000000000 * COIN;
+        consensus.premineAvatar = "https://camo.githubusercontent.com/e53cea6545664129880fbeb28ce7b71f4f5e07fa/687474703a2f2f662e636c2e6c792f6974656d732f33443054326b32593071334d3052316f327730552f496d616765253230323031332e30332e303825323031303a34363a32322e6a706567";
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
