@@ -156,8 +156,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Jezrga</translation>
+        <source>Bitcoin2X Core</source>
+        <translation>Bitcoin2X Jezrga</translation>
     </message>
     </context>
 </TS>

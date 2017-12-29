@@ -138,8 +138,8 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Испрати биткоини на Биткоин адреса</translation>
+        <source>Send coins to a Bitcoin2X address</source>
+        <translation>Испрати Bitcoin2X и на Bitcoin2X  адреса</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -147,7 +147,7 @@
     </message>
     <message>
         <source>Bitcoin</source>
-        <translation>Биткоин</translation>
+        <translation>Bitcoin2X </translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -578,8 +578,8 @@
         <translation>Опции:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Биткоин Core</translation>
+        <source>Bitcoin2X Core</source>
+        <translation>Bitcoin2X  Core</translation>
     </message>
     <message>
         <source>Warning</source>
