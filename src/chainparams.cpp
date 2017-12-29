@@ -113,7 +113,7 @@ public:
 
         consensus.hardforkHeight = 501451;
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 1* COIN;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
