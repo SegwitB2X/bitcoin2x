@@ -640,7 +640,7 @@
         <translation>Opsiynau:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin2X Core</source>
         <translation>Craidd Bitcoin</translation>
     </message>
     <message>
