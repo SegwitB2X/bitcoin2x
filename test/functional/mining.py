@@ -124,7 +124,8 @@ class MiningTest(BitcoinTestFramework):
         bad_block.nTime = 2 ** 31 - 1
         assert_template(node, bad_block, 'time-too-new')
         bad_block.nTime = 0
-        assert_template(node, bad_block, 'time-too-old')
+        assert_template(node, bad_block, 'not-hardfork')
+        # assert_template(node, bad_block, 'time-too-old')
 
         self.log.info("getblocktemplate: Test not best block")
         bad_block = copy.deepcopy(block)

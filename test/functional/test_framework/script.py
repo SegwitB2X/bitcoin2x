@@ -823,6 +823,7 @@ class CScript(bytes):
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
+SIGHASH_FORKID = 0x20
 SIGHASH_ANYONECANPAY = 0x80
 
 def FindAndDelete(script, sig):
@@ -887,7 +888,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype)
+    s += struct.pack(b"<I", hashtype | SIGHASH_FORKID)
 
     hash = hash256(s)
 
@@ -934,6 +935,6 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
     ss += ser_uint256(hashOutputs)
     ss += struct.pack("<i", txTo.nLockTime)
-    ss += struct.pack("<I", hashtype)
+    ss += struct.pack("<I", hashtype | SIGHASH_FORKID)
 
     return hash256(ss)

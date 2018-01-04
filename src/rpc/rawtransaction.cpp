@@ -943,7 +943,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         };
         std::string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))
-            nHashType = mapSigHashValues[strHashType];
+            nHashType = mapSigHashValues[strHashType] | SIGHASH_FORKID;
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
     }
