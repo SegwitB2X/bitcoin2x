@@ -34,7 +34,7 @@ import sys
 import time
 from threading import RLock, Thread
 
-import dash_hash
+import x11_hash
 
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
@@ -582,8 +582,8 @@ class CBlockHeader(object):
             r += struct.pack("<I", self.nTime)
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
-            self.sha256 = uint256_from_str(dash_hash.getPoWHash(r))
-            self.hash = encode(dash_hash.getPoWHash(r)[::-1], 'hex_codec').decode('ascii')
+            self.sha256 = uint256_from_str(x11_hash.getPoWHash(r))
+            self.hash = encode(x11_hash.getPoWHash(r)[::-1], 'hex_codec').decode('ascii')
 
     def rehash(self):
         self.sha256 = None
