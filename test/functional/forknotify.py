@@ -16,8 +16,8 @@ class ForkNotifyTest(BitcoinTestFramework):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         with open(self.alert_filename, 'w', encoding='utf8'):
             pass  # Just open then close to create zero-length file
-        self.extra_args = [["-blockversion=2", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""],
-                           ["-blockversion=211"]]
+        self.extra_args = [["-blockversion=671088642", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""],
+                           ["-blockversion=134217939"]]
         super().setup_network()
 
     def run_test(self):

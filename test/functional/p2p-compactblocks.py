@@ -101,7 +101,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
-        block.nVersion = 4
+        block.nVersion = 4 | (1 << 27)
         if segwit:
             add_witness_commitment(block)
         block.solve()
@@ -801,6 +801,10 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         NetworkThread().start()  # Start up network handling in another thread
 
+        # Mine hardfork
+        self.nodes[0].generate(10)
+        sync_blocks(self.nodes)
+        
         # Test logic begins here
         self.test_node.wait_for_verack()
 

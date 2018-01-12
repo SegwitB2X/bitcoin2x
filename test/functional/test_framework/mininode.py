@@ -34,6 +34,8 @@ import sys
 import time
 from threading import RLock, Thread
 
+import x11_hash
+
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
 
@@ -43,7 +45,7 @@ MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_INV_SZ = 50000
-MAX_BLOCK_BASE_SIZE = 1000000
+MAX_BLOCK_BASE_SIZE = 4000000
 
 COIN = 100000000 # 1 btc in satoshis
 
@@ -542,7 +544,7 @@ class CBlockHeader(object):
             self.calc_sha256()
 
     def set_null(self):
-        self.nVersion = 1
+        self.nVersion = (1 << 27)
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
         self.nTime = 0
@@ -580,8 +582,8 @@ class CBlockHeader(object):
             r += struct.pack("<I", self.nTime)
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
-            self.sha256 = uint256_from_str(hash256(r))
-            self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
+            self.sha256 = uint256_from_str(x11_hash.getPoWHash(r))
+            self.hash = encode(x11_hash.getPoWHash(r)[::-1], 'hex_codec').decode('ascii')
 
     def rehash(self):
         self.sha256 = None

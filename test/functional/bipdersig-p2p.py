@@ -7,7 +7,7 @@
 Test that the DERSIG soft-fork activates at (regtest) height 1251.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import *
 from test_framework.mininode import *
 from test_framework.blocktools import create_coinbase, create_block
@@ -53,6 +53,9 @@ class BIP66Test(BitcoinTestFramework):
         self.extra_args = [['-promiscuousmempoolflags=1', '-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
+    def setup_nodes(self):
+        raise SkipTest("")
+
     def run_test(self):
         node0 = NodeConnCB()
         connections = []
@@ -77,7 +80,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
-        block.nVersion = 2
+        block.nVersion = 2 | (1 << 27)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
@@ -90,7 +93,7 @@ class BIP66Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
-        block.nVersion = 2
+        block.nVersion = 2 | (1 << 27)
         block.rehash()
         block.solve()
         node0.send_and_ping(msg_block(block))
@@ -104,7 +107,7 @@ class BIP66Test(BitcoinTestFramework):
             del node0.last_message["reject"]
 
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
-        block.nVersion = 3
+        block.nVersion = 3 | (1 << 27)
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
                 self.nodeaddress, 1.0)

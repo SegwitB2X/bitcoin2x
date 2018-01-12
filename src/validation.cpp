@@ -1792,10 +1792,9 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    // After hardfork we start accepting replay protected txns 
-    if (pindex->nHeight >= consensusparams.hardforkHeight) { 
-        flags |= SCRIPT_VERIFY_STRICTENC; 
-        flags |= SCRIPT_ENABLE_SIGHASH_FORKID; 
+    // After hardfork we start accepting replay protected txns
+    if (pindex->nHeight >= consensusparams.hardforkHeight) {
+        flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
     }
 
     return flags;
@@ -2088,7 +2087,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             coinbaseVouts.cbegin(), coinbaseVouts.cend(),
             CTxOut(premineValue, GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get())));
         if (it == coinbaseVouts.cend())
-            return state.DoS(100, error("ConnectBlock(): coinbase has no premine", REJECT_INVALID, "bad-cb-no-premine"));
+            return state.DoS(100, error("%s: coinbase has no premine", __func__), REJECT_INVALID, "bad-cb-no-premine");
     }
 
     if (!control.Wait())

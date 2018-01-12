@@ -79,8 +79,8 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [["-walletprematurewitness", "-rpcserialversion=0"],
-                           ["-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
-                           ["-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
+                           ["-blockversion=134217732", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=1"],
+                           ["-blockversion=671088643", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]]
 
     def setup_network(self):
         super().setup_network()
@@ -229,7 +229,7 @@ class SegWitTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
-        assert(tmpl['weightlimit'] == 4000000)
+        assert(tmpl['weightlimit'] == 16000000)
         assert(tmpl['sigoplimit'] == 80000)
         assert(tmpl['transactions'][0]['txid'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 8)

@@ -95,7 +95,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=4']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=671088644']]
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
@@ -126,7 +126,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
     def generate_blocks(self, number, version, test_blocks = []):
         for i in range(number):
-            block = self.create_test_block([], version)
+            block = self.create_test_block([], version | (1 << 27))
             test_blocks.append([block, True])
             self.last_block_time += 600
             self.tip = block.sha256
@@ -135,7 +135,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
     def create_test_block(self, txs, version = 536870912):
         block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600)
-        block.nVersion = version
+        block.nVersion = version | (1 << 27)
         block.vtx.extend(txs)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()

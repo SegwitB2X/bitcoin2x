@@ -328,7 +328,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
-        consensus.hardforkHeight = 1000;
+        consensus.hardforkHeight = 10;
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
         consensus.premineValue = 2000000 * COIN;
 

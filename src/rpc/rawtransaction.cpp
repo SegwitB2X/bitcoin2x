@@ -265,7 +265,11 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
         return EncodeHexTx(*tx, RPCSerializationFlags());
 
     UniValue result(UniValue::VOBJ);
-    TxToJSONExpanded(tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
+
+    if (fAddressIndex)
+        TxToJSONExpanded(tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
+    else
+        TxToJSON(*tx, hashBlock, result);
     return result;
 }
 
@@ -943,7 +947,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         };
         std::string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))
-            nHashType = mapSigHashValues[strHashType];
+            nHashType = mapSigHashValues[strHashType] | SIGHASH_FORKID;
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
     }
