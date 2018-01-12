@@ -265,7 +265,11 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
         return EncodeHexTx(*tx, RPCSerializationFlags());
 
     UniValue result(UniValue::VOBJ);
-    TxToJSONExpanded(tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
+
+    if (fAddressIndex)
+        TxToJSONExpanded(tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
+    else
+        TxToJSON(*tx, hashBlock, result);
     return result;
 }
 

@@ -90,7 +90,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        block.nVersion = 3
+        block.nVersion = 3 | (1 << 27)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
@@ -102,7 +102,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        block.nVersion = 3
+        block.nVersion = 3 | (1 << 27)
         block.solve()
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
@@ -115,7 +115,7 @@ class BIP65Test(BitcoinTestFramework):
             del node0.last_message["reject"]
 
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
-        block.nVersion = 4
+        block.nVersion = 4 | (1 << 27)
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
                 self.nodeaddress, 1.0)

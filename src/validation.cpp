@@ -2088,7 +2088,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             coinbaseVouts.cbegin(), coinbaseVouts.cend(),
             CTxOut(premineValue, GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get())));
         if (it == coinbaseVouts.cend())
-            return state.DoS(100, error("ConnectBlock(): coinbase has no premine", REJECT_INVALID, "bad-cb-no-premine"));
+            return state.DoS(100, error("%s: coinbase has no premine", __func__), REJECT_INVALID, "bad-cb-no-premine");
     }
 
     if (!control.Wait())

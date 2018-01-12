@@ -6,6 +6,7 @@
 
 from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_RETURN
+from .util import hex_str_to_bytes
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):
@@ -25,6 +26,10 @@ def create_block(hashprev, coinbase, nTime=None):
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
+# Destination script to `ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV`
+PREMINE_SCRIPT = hex_str_to_bytes("76a9147dfce3eae30c2592cfc7ad528fab0e208ebd2b7988ac")
+PREMINE_VALUE = 2000000 * COIN
+PREMINE_HEIGHT = 10
 
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
@@ -81,6 +86,10 @@ def create_coinbase(height, pubkey = None):
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [ coinbaseoutput ]
+
+    if (height == PREMINE_HEIGHT):
+        coinbase.vout.append(CTxOut(PREMINE_VALUE, PREMINE_SCRIPT))
+
     coinbase.calc_sha256()
     return coinbase
 
