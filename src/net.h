@@ -663,8 +663,8 @@ protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
-
 public:
+    CMessageHeader::MessageStartChars lastMsgStart{0, 0, 0, 0};
     uint256 hashContinue;
     std::atomic<int> nStartingHeight;
 

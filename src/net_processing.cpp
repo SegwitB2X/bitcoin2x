@@ -2874,14 +2874,16 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
 
     msg.SetVersion(pfrom->GetRecvVersion());
     // Scan for message start
-    auto messageStartValid = memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0;
-    if (!messageStartValid && useFlexibleHandshake)
-        messageStartValid = memcmp(msg.hdr.pchMessageStart, chainparams.BitcoinMessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0;
+    auto messageStartValid = 
+        (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0) || 
+        (useFlexibleHandshake && (memcmp(msg.hdr.pchMessageStart, chainparams.BitcoinMessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0)); 
     if (!messageStartValid) {
         LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->GetId());
         pfrom->fDisconnect = true;
         return false;
     }
+
+    memcpy(pfrom->lastMsgStart, msg.hdr.pchMessageStart, CMessageHeader::MESSAGE_START_SIZE);
 
     // Read header
     CMessageHeader& hdr = msg.hdr;
