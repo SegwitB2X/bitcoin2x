@@ -221,6 +221,10 @@ class SendHeadersTest(BitcoinTestFramework):
 
         NetworkThread().start() # Start up network handling in another thread
 
+        # Mine hardfork
+        self.nodes[0].generate(10)
+        sync_blocks(self.nodes)
+
         # Test logic begins here
         inv_node.wait_for_verack()
         test_node.wait_for_verack()

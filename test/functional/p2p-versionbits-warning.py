@@ -17,7 +17,7 @@ from test_framework.blocktools import create_block, create_coinbase
 VB_PERIOD = 144 # versionbits period length for regtest
 VB_THRESHOLD = 108 # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27 # Choose a bit unassigned to any deployment
+VB_UNKNOWN_BIT = 26 # Choose a bit unassigned to any deployment
 
 WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
@@ -80,7 +80,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
 
         # 2. Now build one period of blocks on the tip, with < VB_THRESHOLD
         # blocks signaling some unknown bit.
-        nVersion = VB_TOP_BITS | (1<<VB_UNKNOWN_BIT)
+        nVersion = VB_TOP_BITS | (1<<VB_UNKNOWN_BIT) | (1 << 27)
         self.send_blocks_with_version(test_node, VB_THRESHOLD-1, nVersion)
 
         # Fill rest of period with regular version blocks

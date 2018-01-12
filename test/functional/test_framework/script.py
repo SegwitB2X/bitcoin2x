@@ -888,7 +888,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype | SIGHASH_FORKID)
+    s += struct.pack(b"<I", hashtype)
 
     hash = hash256(s)
 

@@ -1792,10 +1792,9 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    // After hardfork we start accepting replay protected txns 
-    if (pindex->nHeight >= consensusparams.hardforkHeight) { 
-        flags |= SCRIPT_VERIFY_STRICTENC; 
-        flags |= SCRIPT_ENABLE_SIGHASH_FORKID; 
+    // After hardfork we start accepting replay protected txns
+    if (pindex->nHeight >= consensusparams.hardforkHeight) {
+        flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
     }
 
     return flags;
