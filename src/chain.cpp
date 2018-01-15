@@ -174,3 +174,8 @@ bool CBlockIndex::IsBitcoinX() const
     // Time is the end of CSV deployment
     return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
 }
+
+bool CBlockIndex::IsProofOfStake() const
+{
+    return nVersion & VERSIONBITS_POS;
+}
