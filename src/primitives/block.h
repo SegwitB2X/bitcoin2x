@@ -9,6 +9,7 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "arith_uint256.h"
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -27,6 +28,8 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    std::vector<unsigned char> vchBlockSig;
+    COutPoint prevoutStake;
 
     CBlockHeader()
     {
@@ -43,6 +46,10 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        if (IsPoS()) {
+            READWRITE(vchBlockSig);
+            READWRITE(prevoutStake);
+        }
     }
 
     void SetNull()
@@ -53,6 +60,8 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        vchBlockSig.clear();
+        prevoutStake.SetNull();
     }
 
     bool IsNull() const
@@ -68,6 +77,26 @@ public:
     }
 
     bool IsBitcoinX() const;
+    bool IsPoS() const;
+
+    // entropy bit for stake modifier if chosen by modifier
+    unsigned int GetStakeEntropyBit() const
+    {
+        // Take last bit of block hash as entropy bit
+        unsigned int nEntropyBit = ((UintToArith256(GetHash()).GetLow64()) & 1llu);
+        return nEntropyBit;
+    }
+    
+    // ppcoin: two types of block: proof-of-work or proof-of-stake
+    virtual bool IsProofOfStake() const
+    {
+        return IsPoS();
+    }
+
+    virtual bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
 };
 
 
@@ -106,6 +135,24 @@ public:
         fChecked = false;
     }
 
+    // ppcoin: two types of block: proof-of-work or proof-of-stake
+    bool IsProofOfStake() const
+    {
+        return vtx.size() > 1 && vtx[1]->IsCoinStake();
+    }
+
+    COutPoint PrevoutStake() const
+    {
+        return IsProofOfStake() ? vtx[1]->vin[0].prevout : COutPoint();
+    }
+    
+    std::pair<COutPoint, unsigned int> GetProofOfStake() const
+    {
+        return IsProofOfStake()
+                ? std::make_pair(vtx[1]->vin[0].prevout, nTime)
+                : std::make_pair(COutPoint(), (unsigned int)0);
+    }
+
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
@@ -115,6 +162,8 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.vchBlockSig    = vchBlockSig;
+        block.prevoutStake   = prevoutStake;
         return block;
     }
 

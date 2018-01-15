@@ -24,6 +24,11 @@ bool CBlockHeader::IsBitcoinX() const
     return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
 }
 
+bool CBlockHeader::IsPoS() const
+{
+    return nVersion & VERSIONBITS_POS;
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;
