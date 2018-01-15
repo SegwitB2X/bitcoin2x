@@ -23,6 +23,7 @@
 #include "policy/policy.h"
 #include "policy/rbf.h"
 #include "pow.h"
+#include "pos.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "random.h"
@@ -59,6 +60,9 @@
  */
 
 CCriticalSection cs_main;
+
+std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
+std::set<std::pair<COutPoint, unsigned int> > setStakeSeenOrphan;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -401,7 +405,7 @@ void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool, bool f
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
-        if (!fAddToMempool || (*it)->IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, *it, false, nullptr, nullptr, true)) {
+        if (!fAddToMempool || ((*it)->IsCoinBase() || (*it)->IsCoinStake()) || !AcceptToMemoryPool(mempool, stateDummy, *it, false, nullptr, nullptr, true)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -474,8 +478,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         return false; // state filled in by CheckTransaction
 
     // Coinbase is only valid in a block, not as a loose transaction
-    if (tx.IsCoinBase())
-        return state.DoS(100, false, REJECT_INVALID, "coinbase");
+    if (tx.IsCoinBase() || tx.IsCoinStake())
+        return state.DoS(100, false, REJECT_INVALID, tx.IsCoinBase() ? "coinbase" : "coinstake");
 
     // Reject transactions with witness before segregated witness activates (override with -prematurewitness)
     bool witnessEnabled = IsWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus());
@@ -619,6 +623,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 fSpendsCoinbase = true;
                 break;
             }
+            if (coin.out.IsEmpty())
+                return state.DoS(1, error("ConnectInputs() : special marker is not spendable"), REJECT_INVALID, "bad-txns-not-spendable");
         }
 
         CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, chainActive.Height(),
@@ -1923,6 +1929,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
+    CAmount nActualStakeReward = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
@@ -2009,7 +2016,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            if (tx.IsCoinStake())
+                nActualStakeReward = tx.GetValueOut()-view.GetValueIn(tx);
+            else
+                nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
@@ -2074,11 +2084,20 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (isPremineBlock) blockReward += premineValue;
-    if (block.vtx[0]->GetValueOut() > blockReward)
-        return state.DoS(100,
-                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0]->GetValueOut(), blockReward),
+    if (block.IsProofOfStake()) {
+        if (nActualStakeReward > blockReward) 
+            return state.DoS(100,
+                         error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",
+                         nActualStakeReward, blockReward),
                                REJECT_INVALID, "bad-cb-amount");
+    } else {
+        if (block.vtx[0]->GetValueOut() > blockReward) 
+            return state.DoS(100,
+                     error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
+                           block.vtx[0]->GetValueOut(), blockReward),
+                           REJECT_INVALID, "bad-cb-amount");
+    }
+
 
     // Check premine tx-out at hardfork height
     const auto& coinbaseVouts = block.vtx[0]->vout;
@@ -2932,6 +2951,8 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     // competitive advantage.
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
+    if (pindexNew->IsProofOfStake())
+        setStakeSeen.insert({pindexNew->prevoutStake, pindexNew->nTime & ~STAKE_TIMESTAMP_MASK});
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
@@ -3139,6 +3160,23 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
+            
+    if (block.IsProofOfStake()) {
+        // Coinbase output should be empty if proof-of-stake block
+        if (block.vtx[0]->vout.size() != 1 || !block.vtx[0]->vout[0].IsEmpty())
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "coinbase output not empty for proof-of-stake block");
+
+        // Second transaction must be coinstake, the rest must not be
+        if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
+            return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "second tx is not coinstake");
+        for (unsigned int i = 2; i < block.vtx.size(); i++)
+            if (block.vtx[i]->IsCoinStake())
+                return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
+    }
+    // Check proof-of-stake block signature
+    // if (fCheckSig && !CheckBlockSignature(block))
+    //     return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
+        
 
     // Check transactions
     for (const auto& tx : block.vtx)
