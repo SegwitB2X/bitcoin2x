@@ -18,6 +18,7 @@
 #include "wallet/crypter.h"
 #include "wallet/walletdb.h"
 #include "wallet/rpcwallet.h"
+#include "pos.h"
 
 #include <algorithm>
 #include <atomic>
@@ -99,6 +100,7 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
 };
 
+extern CAmount nReserveBalance;
 
 /** A key pool entry */
 class CKeyPool
@@ -658,6 +660,7 @@ private:
     std::atomic<bool> fAbortRescan;
     std::atomic<bool> fScanningWallet;
 
+    bool SelectCoinsForStaking(CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
      * all coins from coinControl are selected; Never select unconfirmed coins
@@ -816,6 +819,8 @@ public:
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) const { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
+    void AvailableCoinsForStaking(std::vector<COutput>& vCoins) const;
+
     /**
      * populate vCoins with vector of available COutputs.
      */
@@ -950,6 +955,10 @@ public:
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
+
+    uint64_t GetStakeWeight() const;
+    bool CreateCoinStake(const CKeyStore &keystore, uint32_t nBits, uint32_t nStakeTime, CMutableTransaction& tx, CKey& key);
+
 
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries);
     bool AddAccountingEntry(const CAccountingEntry&);

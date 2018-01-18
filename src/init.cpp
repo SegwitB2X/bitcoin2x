@@ -1723,6 +1723,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return false;
     }
 
+#ifdef ENABLE_WALLET
+
+#endif
+
+
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
@@ -1730,6 +1735,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
+        // Mine proof-of-stake blocks in the background
+        if (!gArgs.GetBoolArg("-staking", DEFAULT_STAKING))
+            LogPrintf("Staking disabled\n");
+        else
+            StakeB2X(true, pwallet);
         pwallet->postInitProcess(scheduler);
     }
 #endif

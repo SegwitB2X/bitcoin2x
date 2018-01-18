@@ -62,7 +62,6 @@
 CCriticalSection cs_main;
 
 std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
-std::set<std::pair<COutPoint, unsigned int> > setStakeSeenOrphan;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -1929,7 +1928,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
-    CAmount nActualStakeReward = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
@@ -2016,10 +2014,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            if (tx.IsCoinStake())
-                nActualStakeReward = tx.GetValueOut()-view.GetValueIn(tx);
-            else
-                nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
@@ -2084,19 +2079,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (isPremineBlock) blockReward += premineValue;
-    if (block.IsProofOfStake()) {
-        if (nActualStakeReward > blockReward) 
-            return state.DoS(100,
-                         error("ConnectBlock(): coinstake pays too much (actual=%d vs limit=%d)",
-                         nActualStakeReward, blockReward),
-                               REJECT_INVALID, "bad-cb-amount");
-    } else {
-        if (block.vtx[0]->GetValueOut() > blockReward) 
-            return state.DoS(100,
-                     error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                           block.vtx[0]->GetValueOut(), blockReward),
-                           REJECT_INVALID, "bad-cb-amount");
-    }
+    if (block.vtx[0]->GetValueOut() > blockReward) 
+        return state.DoS(100,
+                    error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
+                        block.vtx[0]->GetValueOut(), blockReward),
+                        REJECT_INVALID, "bad-cb-amount");
 
 
     // Check premine tx-out at hardfork height
@@ -2963,6 +2950,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
+    pindexNew->bnStakeModifierV2 = ComputeStakeModifierV2(pindexNew->pprev, block.IsProofOfWork() ? hash : block.prevoutStake.hash);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
@@ -3163,8 +3151,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             
     if (block.IsProofOfStake()) {
         // Coinbase output should be empty if proof-of-stake block
-        if (block.vtx[0]->vout.size() != 1 || !block.vtx[0]->vout[0].IsEmpty())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "coinbase output not empty for proof-of-stake block");
+        if (block.vtx[0]->vout.size() != 1)
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "multiple coinbase outputs in proof-of-stake block");
 
         // Second transaction must be coinstake, the rest must not be
         if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
