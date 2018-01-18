@@ -1604,7 +1604,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                 COutPoint out(hash, o);
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
-                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || (!tx.IsCoinStake() && is_coinbase != coin.fCoinBase)) {
                     fClean = false; // transaction output mismatch
                 }
             }
@@ -3117,7 +3117,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
-
+        
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
@@ -3150,9 +3150,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
             
     if (block.IsProofOfStake()) {
-        // Coinbase output should be empty if proof-of-stake block
-        if (block.vtx[0]->vout.size() != 1)
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "multiple coinbase outputs in proof-of-stake block");
+        // // Coinbase output should be empty if proof-of-stake block
+        // if (block.vtx[0]->vout.size() != 1)
+        //     return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "multiple coinbase outputs in proof-of-stake block");
 
         // Second transaction must be coinstake, the rest must not be
         if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
@@ -3550,17 +3550,17 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-
+        
         LOCK(cs_main);
 
         if (ret) {
             // Store to disk
-            ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
+            ret = AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);  
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
-            return error("%s: AcceptBlock FAILED", __func__);
+            return error("%s: AcceptBlock FAILED reason: %s\n", __func__, state.GetRejectReason());
         }
     }
 
@@ -3568,7 +3568,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
     CValidationState state; // Only used to report errors, not invalidity - ignore it
     if (!ActivateBestChain(state, chainparams, pblock))
-        return error("%s: ActivateBestChain failed", __func__);
+        return error("%s: ActivateBestChain failed reason: %s\n", __func__, state.GetRejectReason());
 
     return true;
 }

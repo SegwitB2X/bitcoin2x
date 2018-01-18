@@ -16,6 +16,7 @@
 #include "net.h"
 #include "miner.h"
 #include "txdb.h"
+#include "versionbits.h"
 
 #include <boost/thread.hpp>
 

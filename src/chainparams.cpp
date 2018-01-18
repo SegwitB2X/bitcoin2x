@@ -105,6 +105,10 @@ public:
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000723d3581fe1bd55373540a");
 
@@ -221,6 +225,10 @@ public:
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
 
@@ -320,7 +328,11 @@ public:
 
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 0;
-        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL;
+        
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
