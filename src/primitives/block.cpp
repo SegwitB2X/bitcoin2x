@@ -15,7 +15,7 @@ uint256 CBlockHeader::GetHash() const
 {
     return IsBitcoinX()
         ? HashX11(BEGIN(nVersion), END(nNonce))
-        : SerializeHash(*this);
+        : Hash(BEGIN(nVersion), END(nNonce));
 }
 
 bool CBlockHeader::IsBitcoinX() const

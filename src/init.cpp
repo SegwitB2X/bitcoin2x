@@ -686,7 +686,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
-        LogPrintf("Failed to connect best block");
+        LogPrintf("Failed to connect best block %s", state.GetRejectReason());
         StartShutdown();
     }
 
@@ -1722,11 +1722,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!connman.Start(scheduler, connOptions)) {
         return false;
     }
-
-#ifdef ENABLE_WALLET
-
-#endif
-
 
     // ********************************************************* Step 12: finished
 

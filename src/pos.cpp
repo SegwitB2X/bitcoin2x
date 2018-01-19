@@ -25,6 +25,9 @@ bool SignBlock(CBlock& block, CWallet& wallet)
         if (wallet.CreateCoinStake(wallet, block.nBits, block.nTime, txCoinStake, key))
         {
             block.vtx.insert(block.vtx.begin() + 1, MakeTransactionRef(std::move(txCoinStake)));
+            CMutableTransaction tx(*block.vtx[0]);
+            tx.vout.pop_back();
+            block.vtx[0] = MakeTransactionRef(std::move(tx));
             GenerateCoinbaseCommitment(block, chainActive.Tip(), Params().GetConsensus());
             block.hashMerkleRoot = BlockMerkleRoot(block);
             block.prevoutStake = block.vtx[1]->vin[0].prevout;
@@ -203,7 +206,7 @@ bool CheckStakeKernelHash(uint256 bnStakeModifierV2, int nPrevHeight, uint32_t n
 
     // Now check if proof-of-stake hash meets target protocol
     if (UintToArith256(hashProofOfStake) > bnTarget)
-        return error("CheckStakeKernelHash() : target not met %s > %s\n", bnTarget.ToString(), hashProofOfStake.ToString());
+        return error("CheckStakeKernelHash() : target not met %s < %s\n", bnTarget.ToString(), hashProofOfStake.ToString());
 
     LogPrint(BCLog::STAKE, "CheckStakeKernelHash() : using block at height=%d timestamp=%s for block from timestamp=%s\n",
         nPrevHeight,
