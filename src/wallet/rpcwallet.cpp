@@ -20,6 +20,7 @@
 #include "rpc/server.h"
 #include "script/sign.h"
 #include "timedata.h"
+#include "txdb.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "wallet/coincontrol.h"
@@ -3088,6 +3089,101 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue countactiveaddresses(const JSONRPCRequest& request) {
+    if (!fAddressIndex || pindexBestHeader == nullptr) return UniValue(0);
+
+    LOCK(cs_main);
+
+    std::set<uint160> addresses;
+    
+    const auto endTime = pindexBestHeader->nTime - 24 * 60 * 60;
+
+    uint160 premineAddr;
+    int premineType;
+    CBitcoinAddress(Params().GetConsensus().premineAddress).GetIndexKey(premineAddr, premineType);
+
+    CBlockIndex* currentIndex = pindexBestHeader;
+    while (currentIndex != nullptr && currentIndex->nTime > endTime) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, currentIndex, Params().GetConsensus()))
+            break;
+
+        for (const auto& tx : block.vtx) {
+            for (const auto& in : tx->vin) {
+                CSpentIndexValue spentInfo;
+                CSpentIndexKey spentKey(in.prevout.hash, in.prevout.n);
+                if (!GetSpentIndex(spentKey, spentInfo))
+                    continue;
+
+                addresses.insert(spentInfo.addressHash);
+            }
+            for (const auto& out : tx->vout) {
+                CTxDestination dest;
+                if (!ExtractDestination(out.scriptPubKey, dest))
+                    continue;
+
+                uint160 addr;
+                switch (dest.which()) {
+                    default:
+                        continue;
+                    case 1:
+                        addr = (uint160) boost::get<CKeyID>(dest);
+                        break;
+                    case 2:
+                        addr = (uint160) boost::get<CScriptID>(dest);
+                        break;
+                }
+
+                if (addr != premineAddr)
+                    addresses.insert(addr);
+            }
+        }
+
+        currentIndex = currentIndex->pprev;
+    }
+
+    return UniValue(addresses.size());
+}
+
+UniValue countaddresseswithbalance(const JSONRPCRequest& request) {
+    if (!fAddressIndex) return UniValue(0);
+
+    LOCK(cs_main);
+
+    uint64_t addressCount;
+    if (!pblocktree->ReadAddressCounter(addressCount))
+        return UniValue(0);
+
+    return UniValue(addressCount);
+}
+
+UniValue averagebalance(const JSONRPCRequest& request) {
+    if (pindexBestHeader == nullptr || !fAddressIndex)
+        return ValueFromAmount(0);
+
+    LOCK(cs_main);
+
+    const auto& height = pindexBestHeader->nHeight;
+    const auto& halvingInterval = Params().GetConsensus().nSubsidyHalvingInterval;
+    CAmount subsidy = 50 * COIN;
+    CAmount supply = 0;
+
+    for (int i = 0; i < height / halvingInterval; i++) {
+        if (i >= 64) {
+            subsidy = 0;
+            break;
+        }
+        supply += subsidy * halvingInterval;
+        subsidy >>= 1;
+    }
+    supply += subsidy * (height % halvingInterval);
+
+    uint64_t addressCount = 0;
+    pblocktree->ReadAddressCounter(addressCount);
+
+    return ValueFromAmount(addressCount > 0 ? supply / addressCount : 0);
+}
+
 UniValue generate(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3197,6 +3293,10 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
+
+    { "wallet",             "countactiveaddresses",     &countactiveaddresses,     false,  {} },
+    { "wallet",             "countaddresseswithbalance",&countaddresseswithbalance,false,  {} },
+    { "wallet",             "averagebalance",           &averagebalance,           false,  {} },
 
     { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries"} },
 };

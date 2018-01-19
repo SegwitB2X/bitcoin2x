@@ -1932,6 +1932,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    std::map<uint160, CAmount> addressBalances;
+    std::map<uint160, CAmount> addressBalanceDiffs;
+    int32_t activeAddressDelta = 0;
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -1987,9 +1990,20 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                     if (fAddressIndex && addressType > 0) {
                         // record spending activity
                         addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, tx.GetHash(), j, true), prevout.nValue * -1));
+                        addressBalanceDiffs[hashBytes] += prevout.nValue * -1;
 
                         // remove address from unspent index
                         addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n), CAddressUnspentValue()));
+
+                        // get address balance
+                        if (addressBalances.find(hashBytes) == addressBalances.cend()) {
+                            std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+                            pblocktree->ReadAddressIndex(hashBytes, addressType, addressIndex);
+                            CAmount balance = 0;
+                            for (const auto& index : addressIndex)
+                                balance += index.second;
+                            addressBalances[hashBytes] = balance;
+                        }
                     }
 
                     spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(tx.GetHash(), j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
@@ -2024,38 +2038,39 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
                 const CTxOut &out = tx.vout[k];
 
+                uint160 hashBytes;
+                int addressType;
+
                 if (out.scriptPubKey.IsPayToScriptHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-
-                    // record receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, tx.GetHash(), k, false), out.nValue));
-
-                    // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), tx.GetHash(), k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
-
+                    hashBytes = uint160(std::vector <unsigned char>(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22));
+                    addressType = 2;
                 } else if (out.scriptPubKey.IsPayToPubkeyHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-
-                    // record receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, tx.GetHash(), k, false), out.nValue));
-
-                    // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), tx.GetHash(), k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
-
+                    hashBytes = uint160(std::vector <unsigned char>(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23));
+                    addressType = 1;
                 } else if (out.scriptPubKey.IsPayToPubkey()) {
-                    std::vector<unsigned char> pubkeyBytes(out.scriptPubKey.begin() + 1, out.scriptPubKey.end()-1);
-                    auto tmp(Hash160(pubkeyBytes));
-                    std::vector<unsigned char> hashBytes(tmp.begin(), tmp.end());
-
-                    // record receiving activity
-                    addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, tx.GetHash(), k, false), out.nValue));
-
-                    // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), tx.GetHash(), k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
+                    std::vector<unsigned char> pubkeyBytes(out.scriptPubKey.begin() + 1, out.scriptPubKey.end() - 1);
+                    hashBytes = Hash160(pubkeyBytes);
+                    addressType = 1;
                 } else {
                     continue;
                 }
 
+                // record receiving activity
+                addressIndex.push_back(std::make_pair(CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, tx.GetHash(), k, false), out.nValue));
+                addressBalanceDiffs[hashBytes] += out.nValue;
+
+                // record unspent output
+                addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(addressType, hashBytes, tx.GetHash(), k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight)));
+
+                // get address balance
+                if (addressBalances.find(hashBytes) == addressBalances.cend()) {
+                    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+                    pblocktree->ReadAddressIndex(hashBytes, addressType, addressIndex);
+                    CAmount balance = 0;
+                    for (const auto& index : addressIndex)
+                        balance += index.second;
+                    addressBalances[hashBytes] = balance;
+                }
             }
         }
         if (i > 0) {
@@ -2130,6 +2145,27 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
         if (!pblocktree->UpdateSpentIndex(spentIndex))
             return AbortNode(state, "Failed to write transaction index");
+
+        // count new addresses with balance
+        for (const auto& entry : addressBalances) {
+            const auto& diff = addressBalanceDiffs.find(entry.first)->second;
+            if (diff == 0) continue;
+
+            const auto& balance = entry.second;
+            const auto newBalance = balance + diff;
+            if (newBalance == 0) {
+                activeAddressDelta--;
+            } else if (balance == 0) {
+                activeAddressDelta++;
+            }
+        }
+
+        // Remove premine address
+        if (isPremineBlock)
+            activeAddressDelta--;
+
+        if (!pblocktree->ModifyAddressCounter(activeAddressDelta))
+            return AbortNode(state, "Failed to write address count");
 
         unsigned int logicalTS = pindex->nTime;
         unsigned int prevLogicalTS = 0;

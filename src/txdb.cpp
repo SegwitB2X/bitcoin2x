@@ -33,6 +33,7 @@ static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
 static const char DB_ADDRESSINDEX = 'a';
+static const char DB_ADDRESS_COUNTER_INDEX = 'A';
 
 static const char DB_ADDRESSUNSPENTINDEX = 'u';
 static const char DB_TIMESTAMPINDEX = 's';
@@ -469,6 +470,16 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     }
 
     return true;
+}
+
+bool CBlockTreeDB::ReadAddressCounter(uint64_t& count) {
+    return Read(DB_ADDRESS_COUNTER_INDEX, count);
+}
+
+bool CBlockTreeDB::ModifyAddressCounter(const int64_t& delta) {
+    uint64_t count = 0;
+    ReadAddressCounter(count);
+    return Write(DB_ADDRESS_COUNTER_INDEX, count + delta);
 }
 
 namespace {

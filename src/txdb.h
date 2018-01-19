@@ -148,6 +148,9 @@ public:
     bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
 
+    bool ReadAddressCounter(uint64_t& count);
+    bool ModifyAddressCounter(const int64_t& delta);
+
     bool blockOnchainActive(const uint256 &hash);
 };
 
