@@ -189,6 +189,7 @@ void Shutdown()
     StopHTTPServer();
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
+        StakeB2X(false, pwallet);
         pwallet->Flush(false);
     }
 #endif

@@ -33,7 +33,7 @@ static const int MODIFIER_INTERVAL_RATIO = 3;
 static const int STAKE_TIMESTAMP_MASK = 15;
 static const int POS_EXPECTED_HEIGHT = 501450;
 static const int STAKE_MIN_AGE = 0; //8 hours
-static const bool DEFAULT_STAKING = true;
+static const bool DEFAULT_STAKING = false;
 
 extern bool fStakeRun;
 extern int64_t nLastCoinStakeSearchInterval;
