@@ -3090,21 +3090,22 @@ UniValue bumpfee(const JSONRPCRequest& request)
 }
 
 UniValue countactiveaddresses(const JSONRPCRequest& request) {
-    if (!fAddressIndex || pindexBestHeader == nullptr) return UniValue(0);
+    auto* pindexBest = chainActive.Tip();
+    if (!fAddressIndex || pindexBest == nullptr) return UniValue(0);
 
     LOCK(cs_main);
 
     std::set<uint160> addresses;
     
-    const auto endTime = pindexBestHeader->nTime - 24 * 60 * 60;
+    const auto endTime = pindexBest->nTime - 24 * 60 * 60;
 
     uint160 premineAddr;
     int premineType;
     CBitcoinAddress(Params().GetConsensus().premineAddress).GetIndexKey(premineAddr, premineType);
 
-    CBlockIndex* currentIndex = pindexBestHeader;
+    CBlock block;
+    CBlockIndex* currentIndex = pindexBest;
     while (currentIndex != nullptr && currentIndex->nTime > endTime) {
-        CBlock block;
         if (!ReadBlockFromDisk(block, currentIndex, Params().GetConsensus()))
             break;
 
