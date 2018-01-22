@@ -119,6 +119,8 @@ public:
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
         consensus.premineValue = 2000000 * COIN;
 
+        consensus.posHeight = 501451;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -239,6 +241,8 @@ public:
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
         consensus.premineValue = 2000000 * COIN;
 
+        consensus.posHeight = 1200000;
+
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
         pchBitcoinMessageStart[2] = 0x09;
@@ -344,6 +348,8 @@ public:
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
         consensus.premineValue = 2000000 * COIN;
 
+        consensus.posHeight = 1000;
+        
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
         pchBitcoinMessageStart[2] = 0xb5;

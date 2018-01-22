@@ -72,6 +72,8 @@ struct Params {
     int hardforkHeight;
     std::string premineAddress;
     CAmount premineValue;
+
+    int posHeight;
 };
 } // namespace Consensus
 

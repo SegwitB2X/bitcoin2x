@@ -1832,6 +1832,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
 
+    if (chainActive.Height() < chainparams.GetConsensus().posHeight && block.IsProofOfStake())
+        return state.DoS(100, error("ConnectBlock(): too early PoS"),
+            REJECT_INVALID, "bad-blk-early-pos");
+
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
@@ -3118,6 +3122,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
         
+    if (block.IsProofOfStake() != block.CBlockHeader::IsProofOfStake())
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-version", true, "block structure and version are inconsistent");
+
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
@@ -3148,7 +3155,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
-            
+
     if (block.IsProofOfStake()) {
         // // Coinbase output should be empty if proof-of-stake block
         // if (block.vtx[0]->vout.size() != 1)
@@ -3162,8 +3169,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                 return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
     }
     // Check proof-of-stake block signature
-    // if (fCheckSig && !CheckBlockSignature(block))
-    //     return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
+    if (!CheckBlockSignature(block))
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
         
 
     // Check transactions

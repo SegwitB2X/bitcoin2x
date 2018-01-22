@@ -26,12 +26,12 @@ extern CChain chainActive;
 bool IsInitialBlockDownload();
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock);
+bool IsCompressedOrUncompressedPubKey(const valtype &vchPubKey);
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group
 static const int MODIFIER_INTERVAL_RATIO = 3;
 static const int STAKE_TIMESTAMP_MASK = 15;
-static const int POS_EXPECTED_HEIGHT = 501450;
 static const int STAKE_MIN_AGE = 0; //8 hours
 static const bool DEFAULT_STAKING = false;
 
@@ -46,8 +46,12 @@ bool CheckStake(CBlock* pblock, CWallet& wallet);
 
 bool SignBlock(CBlock& block, CWallet& wallet);
 
+bool CreatePoSBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet);
+
 /** Generate a new block, without valid proof-of-work */
 void StakeB2X(bool fStake, CWallet *pwallet);
+
+bool CheckBlockSignature(const CBlock& block);
 
 uint256 ComputeStakeModifierV2(const CBlockIndex* pindexPrev, const uint256& kernel);
 

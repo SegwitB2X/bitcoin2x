@@ -81,36 +81,40 @@ void ThreadStakeMiner(CWallet *pwallet)
             
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
 
-        if (SignBlock(*pblock, *pwallet)) {
-            CBlockIndex* pindexPrev = chainActive.Tip();
-            CheckProofOfStake(pcoinsTip, pindexPrev->bnStakeModifierV2, pindexPrev->nHeight, pblock->nBits, pblock->nTime, pblock->vtx[1]->vin[0].prevout);
-            // Found a solution
-            {
+        if (CreatePoSBlock(pblock, *pwallet)) {
                 LOCK(cs_main);
                 if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash()) {
                     LogPrint(BCLog::STAKE, "%s: Generated block is stale, starting over\n", __func__);
-                    continue;
                 }
-
                 // Track how many getdata requests this block gets
                 {
                     LOCK(pwallet->cs_wallet);
                     pwallet->mapRequestCount[pblock->GetHash()] = 0;
                 }
-
                 // Process this block the same as if we had received it from another node
                 if (!ProcessNewBlock(Params(), pblock, true, nullptr)) {
                     LogPrint(BCLog::STAKE, "%s: block not accepted, starting over\n", __func__);
-                    continue;
                 }
-            }
-            MilliSleep(500);
         }
         else {
-            LogPrint(BCLog::STAKE, "%s: Failed to sign block template, waiting\n", __func__);
+            LogPrint(BCLog::STAKE, "%s: Failed to create PoS block, waiting\n", __func__);
             MilliSleep(10000);
         }
+        MilliSleep(500);
     }
+}
+
+bool CreatePoSBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet) {
+    if (!SignBlock(*pblock, wallet)) {
+        LogPrint(BCLog::STAKE, "%s: failed to sign block\n", __func__);
+        return false;
+    }
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if (!CheckProofOfStake(pcoinsTip, pindexPrev->bnStakeModifierV2, pindexPrev->nHeight, pblock->nBits, pblock->nTime, pblock->vtx[1]->vin[0].prevout)) {
+        LogPrint(BCLog::STAKE, "%s: check new PoS failed\n", __func__);
+        return false;
+    }
+    return true;
 }
 
 void StakeB2X(bool fStake, CWallet *pwallet)
@@ -147,6 +151,51 @@ uint256 ComputeStakeModifierV2(const CBlockIndex* pindexPrev, const uint256& ker
     CDataStream ss(SER_GETHASH, 0);
     ss << kernel << pindexPrev->bnStakeModifierV2;
     return Hash(ss.begin(), ss.end());
+}
+
+bool CheckBlockSignature(const CBlock& block)
+{
+    if (block.IsProofOfWork())
+        return block.vchBlockSig.empty();
+
+    if (block.vchBlockSig.empty())
+        return false;
+
+    std::vector<valtype> vSolutions;
+    txnouttype whichType;
+
+    const CTxOut& txout = block.vtx[1]->vout[1];
+
+    if (!Solver(txout.scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_PUBKEY)
+    {
+        valtype& vchPubKey = vSolutions[0];
+        return CPubKey(vchPubKey).Verify(block.GetHash(), block.vchBlockSig);
+    }
+    else
+    {
+        // Block signing key also can be encoded in the nonspendable output
+        // This allows to not pollute UTXO set with useless outputs e.g. in case of multisig staking
+
+        const CScript& script = txout.scriptPubKey;
+        CScript::const_iterator pc = script.begin();
+        opcodetype opcode;
+        valtype vchPushValue;
+
+        if (!script.GetOp(pc, opcode, vchPushValue))
+            return false;
+        if (opcode != OP_RETURN)
+            return false;
+        if (!script.GetOp(pc, opcode, vchPushValue))
+            return false;
+        if (!IsCompressedOrUncompressedPubKey(vchPushValue))
+            return false;
+        return CPubKey(vchPushValue).Verify(block.GetHash(), block.vchBlockSig);
+    }
+
+    return false;
 }
 
 // BlackCoin kernel protocol
@@ -280,4 +329,5 @@ bool CheckProofOfStake(CCoinsViewCache* view, uint256 bnStakeModifierV2, int nPr
         LogPrint(BCLog::STAKE, "%s: check kernel failed on coinstake %s\n", __func__, prevout.hash.ToString());
         return false;
     }
+    return true;
 }
