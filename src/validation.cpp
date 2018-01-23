@@ -1651,8 +1651,6 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
 
                         // restore unspent index
                         addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, coin.nHeight)));
-                    } else {
-                        continue;
                     }
                 }                
 
