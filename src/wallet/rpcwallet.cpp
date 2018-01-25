@@ -3090,7 +3090,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
 UniValue generate(const JSONRPCRequest& request)
 {
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    CWallet * pwallet = GetWalletForJSONRPCRequest(request);
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
@@ -3130,7 +3130,7 @@ UniValue generate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    return generateBlocks(coinbase_script, num_generate, max_tries, true, pwallet);
 }
 
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp

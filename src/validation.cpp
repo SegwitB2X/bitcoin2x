@@ -1835,6 +1835,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (chainActive.Height() < chainparams.GetConsensus().posHeight && block.IsProofOfStake())
         return state.DoS(100, error("ConnectBlock(): too early PoS"),
             REJECT_INVALID, "bad-blk-early-pos");
+    
+    if (pindex->nHeight > chainparams.GetConsensus().posHeight && !(pindex->nHeight % 10) && !block.IsProofOfStake()) {
+        return state.DoS(1, error("ConnectBlock(): expected PoS block on height %d", pindex->nHeight),
+            REJECT_INVALID, "bad-expected-pos");
+    }
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();

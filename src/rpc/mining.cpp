@@ -16,6 +16,7 @@
 #include "miner.h"
 #include "net.h"
 #include "policy/fees.h"
+#include "pos.h"
 #include "pow.h"
 #include "rpc/blockchain.h"
 #include "rpc/mining.h"
@@ -105,7 +106,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript, CWallet* pwallet)
 {
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
@@ -123,15 +124,26 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
-        CBlock *pblock = &pblocktemplate->block;
+        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
         {
             LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+            IncrementExtraNonce(pblock.get(), chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            ++pblock->nNonce;
+
+        if (pblock->CBlockHeader::IsProofOfStake()) {
+            if (pwallet == nullptr)
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "No wallet for staking");
             --nMaxTries;
+            if (!CreatePoSBlock(pblock, *pwallet))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to create PoS block");
+        } else {
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
         }
+
+        
         if (nMaxTries == 0) {
             break;
         }
