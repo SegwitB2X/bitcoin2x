@@ -134,8 +134,9 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             if (pwallet == nullptr)
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "No wallet for staking");
             --nMaxTries;
-            if (!CreatePoSBlock(pblock, *pwallet))
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to create PoS block");
+            if (!CreatePoSBlock(pblock, *pwallet)) {
+                continue;
+            }
         } else {
             while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
                 ++pblock->nNonce;

@@ -1841,6 +1841,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             REJECT_INVALID, "bad-expected-pos");
     }
 
+    if (pindex->nHeight % 10 && block.IsProofOfStake()) {
+        return state.DoS(1, error("ConnectBlock(): expected PoW block on height %d", pindex->nHeight),
+            REJECT_INVALID, "bad-expected-pos");
+    }
+
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());

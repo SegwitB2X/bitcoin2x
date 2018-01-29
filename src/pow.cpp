@@ -12,10 +12,18 @@
 
 static const int64_t DGWPastBlocksMax = 24;
 
+const CBlockIndex* GetPrevPoS(const CBlockIndex* pindexLast, const Consensus::Params& params)  {
+    auto cur = pindexLast;
+    while (cur != nullptr && cur->nHeight % 10) {
+        cur = cur->pprev;
+    }
+    return cur->nHeight > params.posHeight ? cur : nullptr;
+}
+
 static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params, bool isHardfork) {
     /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
+    if (pindexLast == nullptr) return UintToArith256(params.powLimit).GetCompact();
     const CBlockIndex *BlockLastSolved = pindexLast;
-    const CBlockIndex *BlockReading = pindexLast;
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
@@ -24,9 +32,18 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     arith_uint256 PastDifficultyAverage;
     arith_uint256 PastDifficultyAveragePrev;
 
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
+    bool isNextPoS = !((pindexLast->nHeight + 1) % 10);
+    bool isPoSPeriod = (pindexLast->nHeight) > params.posHeight;
+
+    if (BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin || 
+        (isPoSPeriod && isNextPoS && (BlockLastSolved->nHeight - params.posHeight) / 10 < PastBlocksMin)) {
         return UintToArith256(params.powLimit).GetCompact();
     }
+
+
+    if (isPoSPeriod && isNextPoS) {BlockLastSolved = GetPrevPoS(pindexLast, params); }
+    const CBlockIndex *BlockReading = BlockLastSolved;
+    
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if (PastBlocksMax > 0 && i > PastBlocksMax) { break; }
@@ -45,13 +62,16 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
         LastBlockTime = BlockReading->GetBlockTime();
 
         if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
+        BlockReading = isPoSPeriod ? 
+                        isNextPoS ? GetPrevPoS(BlockReading, params) : 
+                        BlockReading->pprev->IsProofOfStake() ? BlockReading->pprev->pprev : BlockReading->pprev 
+                                    : BlockReading->pprev;
     }
 
     arith_uint256 bnNew(PastDifficultyAverage);
 
-    const auto powTargetSpacing = isHardfork ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
-    int64_t _nTargetTimespan = CountBlocks * powTargetSpacing;
+    const auto targetSpacing = isHardfork ? isNextPoS && isPoSPeriod ? params.nPosTargetSpacing : params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
+    int64_t _nTargetTimespan = (CountBlocks ? CountBlocks : 1) * targetSpacing;
 
     if (nActualTimespan < _nTargetTimespan/3)
         nActualTimespan = _nTargetTimespan/3;
