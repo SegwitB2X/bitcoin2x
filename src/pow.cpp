@@ -63,7 +63,7 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
 
         if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
         BlockReading = isPoSPeriod ? 
-                        isNextPoS ? GetPrevPoS(BlockReading, params) : 
+                        isNextPoS ? GetPrevPoS(BlockReading->pprev, params) :
                         BlockReading->pprev->IsProofOfStake() ? BlockReading->pprev->pprev : BlockReading->pprev 
                                     : BlockReading->pprev;
     }

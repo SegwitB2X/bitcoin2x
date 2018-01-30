@@ -60,6 +60,11 @@ void ThreadStakeMiner(CWallet *pwallet)
             MilliSleep(10000);
         }
 
+        while ((chainActive.Height() + 1) % 10) {
+            LogPrint(BCLog::STAKE, "%s: Waiting for PoS\n", __func__);
+            MilliSleep(10000);
+        }
+
         // while (IsInitialBlockDownload()) {
         //     LogPrint(BCLog::STAKE, "%s: Initial blockchain downloading, waitig\n", __func__);
         //     MilliSleep(10000);
@@ -268,43 +273,6 @@ bool CheckStakeKernelHash(uint256 bnStakeModifierV2, int nPrevHeight, uint32_t n
 
     return true;
 }
-
-/*
-// Check kernel hash target and coinstake signature
-bool CheckProofOfStake(CBlockIndex* pindexPrev, CValidationState& state, const CTransaction& tx, unsigned int nTime, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
-{
-    if (!tx.IsCoinStake())
-        return error("CheckProofOfStake() : called on non-coinstake %s", tx.GetHash().ToString());
-
-    // Kernel (input 0) must match the stake hash target per coin age (nBits)
-    const CTxIn& txin = tx.vin[0];
-
-    // First try finding the previous transaction in database
-    CTransaction txPrev;
-    CDiskTxPos txindex;
-    if (!ReadFromDisk(txPrev, txindex, *pblocktree, txin.prevout))
-        return state.DoS(1, error("CheckProofOfStake() : INFO: read txPrev failed"));  // previous transaction not in main chain, may occur during initial download
-
-    // Verify signature
-    if (!VerifySignature(txPrev, tx, 0, SCRIPT_VERIFY_NONE))
-        return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString()));
-
-    // Read block header
-    CBlockHeader block;
-    if (!ReadFromDisk(block, txindex.nFile, txindex.nPos))
-        return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
-
-    // Min age requirement
-    int nDepth;
-    if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nDepth))
-        return state.DoS(100, error("CheckProofOfStake() : tried to stake at depth %d", nDepth + 1));
-
-    if (!CheckStakeKernelHash(pindexPrev, nBits, block, txindex.nTxOffset - txindex.nPos, txPrev, txin.prevout, nTime, hashProofOfStake, targetProofOfStake, fDebug))
-        return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx.GetHash().ToString(), hashProofOfStake.ToString())); // may occur during initial download or if behind on block chain sync
-
-    return true;
-}
-*/
 
 bool CheckProofOfStake(CCoinsViewCache* view, uint256 bnStakeModifierV2, int nPrevHeight, uint32_t nBits, uint32_t nTime, const COutPoint& prevout) {
     if (!view->HaveCoin(prevout)) {
