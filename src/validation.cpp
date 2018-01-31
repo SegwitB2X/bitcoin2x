@@ -61,8 +61,6 @@
 
 CCriticalSection cs_main;
 
-std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
-
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = nullptr;
@@ -2972,8 +2970,6 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     // competitive advantage.
     pindexNew->nSequenceId = 0;
     BlockMap::iterator mi = mapBlockIndex.insert(std::make_pair(hash, pindexNew)).first;
-    if (pindexNew->IsProofOfStake())
-        setStakeSeen.insert({pindexNew->prevoutStake, pindexNew->nTime & ~STAKE_TIMESTAMP_MASK});
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())

@@ -465,10 +465,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 if (pindexNew->IsProofOfWork() && !CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
 
-                if (pindexNew->IsProofOfStake())
-                    setStakeSeen.insert({pindexNew->prevoutStake, pindexNew->nTime & ~STAKE_TIMESTAMP_MASK});
-
-
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);

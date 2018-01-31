@@ -46,7 +46,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        if (IsPoS()) {
+        if (IsPoS() && IsBitcoinX()) {
             READWRITE(vchBlockSig);
             READWRITE(prevoutStake);
         }
