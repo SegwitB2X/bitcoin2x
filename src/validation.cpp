@@ -1806,6 +1806,22 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 }
 
 
+static bool UpdateHashProof(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindex, CCoinsViewCache& view)
+{
+    if (pindex->IsProofOfStake()) {
+        auto& prevout = block.vtx[1]->vin[0].prevout;
+        if (!view.HaveCoin(prevout)) {
+            LogPrint(BCLog::STAKE, "%s: inputs missing/spent\n", __func__);
+            return false;
+        }
+        auto coin = view.AccessCoin(prevout);
+        auto prevTime = chainActive[coin.nHeight]->nTime;
+        pindex->hashProof = GetStakeHashProof(prevout, block.nTime, prevTime, pindex->bnStakeModifierV2);
+    } else {
+        pindex->hashProof = block.GetHash();
+    }
+    return true;
+}
 
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
@@ -1857,6 +1873,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
+
+    // State is filled in by UpdateHashProof
+    if (!UpdateHashProof(block, state, chainparams.GetConsensus(), pindex, view))
+        return error("%s: ConnectBlock(): %s", __func__, state.GetRejectReason().c_str());
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {

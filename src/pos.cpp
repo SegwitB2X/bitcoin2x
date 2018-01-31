@@ -158,6 +158,15 @@ uint256 ComputeStakeModifierV2(const CBlockIndex* pindexPrev, const uint256& ker
     return Hash(ss.begin(), ss.end());
 }
 
+bool IsCanonicalBlockSignature(const CBlock& block)
+{
+    if (block.IsProofOfWork()) {
+        return block.vchBlockSig.empty();
+    }
+
+    return IsLowDERSignature(block.vchBlockSig, NULL, false);
+}
+
 bool CheckBlockSignature(const CBlock& block)
 {
     if (block.IsProofOfWork())
@@ -168,6 +177,9 @@ bool CheckBlockSignature(const CBlock& block)
 
     std::vector<valtype> vSolutions;
     txnouttype whichType;
+
+    if (!IsCanonicalBlockSignature(block))
+        return false;
 
     const CTxOut& txout = block.vtx[1]->vout[1];
 
@@ -201,6 +213,14 @@ bool CheckBlockSignature(const CBlock& block)
     }
 
     return false;
+}
+
+
+uint256 GetStakeHashProof(const COutPoint& prevout, uint32_t nTime, uint32_t nPrevTime, uint256 nStakeModifier) {
+    CDataStream ss(SER_GETHASH, 0);
+    ss << nStakeModifier;
+    ss << nPrevTime << prevout.hash << prevout.n << nTime;
+    return Hash(ss.begin(), ss.end());
 }
 
 // BlackCoin kernel protocol
@@ -242,20 +262,15 @@ bool CheckStakeKernelHash(uint256 bnStakeModifierV2, int nPrevHeight, uint32_t n
     arith_uint256 bnWeight = arith_uint256(nValueIn);
     bnTarget *= bnWeight;
 
-    int64_t nStakeModifierTime = nStakeTime;
-
     // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    ss << bnStakeModifierV2;
-    ss << nStakeModifierTime << prevout.hash << prevout.n << nTime;
-    uint256 hashProofOfStake = Hash(ss.begin(), ss.end());
+    uint256 hashProofOfStake = GetStakeHashProof(prevout, nTime, nStakeTime, bnStakeModifierV2);
 
     LogPrint(BCLog::STAKE, "CheckStakeKernelHash() : using block at height=%d timestamp=%s for block from timestamp=%s\n",
         nPrevHeight,
-        DateTimeStrFormat(nStakeModifierTime),
+        DateTimeStrFormat(nStakeTime),
         DateTimeStrFormat(nTimeBlockFrom));
     LogPrint(BCLog::STAKE, "CheckStakeKernelHash() : check nTimeBlockFrom=%u nStakeTime=%u nPrevout=%u nTimeTx=%u hashProof=%s\n",
-        nTimeBlockFrom, nStakeModifierTime, prevout.n, nTime,
+        nTimeBlockFrom, nStakeTime, prevout.n, nTime,
         hashProofOfStake.ToString());
 
     // Now check if proof-of-stake hash meets target protocol
@@ -264,7 +279,7 @@ bool CheckStakeKernelHash(uint256 bnStakeModifierV2, int nPrevHeight, uint32_t n
 
     LogPrint(BCLog::STAKE, "CheckStakeKernelHash() : using block at height=%d timestamp=%s for block from timestamp=%s\n",
         nPrevHeight,
-        DateTimeStrFormat(nStakeModifierTime),
+        DateTimeStrFormat(nStakeTime),
         DateTimeStrFormat(nTimeBlockFrom));
     LogPrint(BCLog::STAKE, "CheckStakeKernelHash() : pass nTimeBlockFrom=%u nPrevout=%u nTimeTx=%u hashProof=%s\n",
         nTimeBlockFrom, prevout.n, nTime,

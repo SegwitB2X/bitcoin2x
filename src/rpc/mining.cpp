@@ -199,6 +199,26 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
 
+UniValue setstaking(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+    throw std::runtime_error(
+        "setstaking\n"
+        "\nStarts or stops staking thread."
+        "\nArguments:\n"
+        "1. \"enable\"       (bool, required) Wheter to start or stop staking.\n"
+        "\nResult:\n"
+        "\nExamples:\n"
+        + HelpExampleCli("getmininginfo", "true")
+        + HelpExampleRpc("getmininginfo", "false")
+    );
+
+    for (CWalletRef pwallet : vpwallets)
+        StakeB2X(request.params[0].get_bool(), pwallet);
+
+    return "";
+}
+
 UniValue getmininginfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -987,6 +1007,7 @@ static const CRPCCommand commands[] =
     { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","dummy"} },
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
+    { "generating",         "setstaking",             &setstaking,             true,  {"enable"} },
 
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"conf_target", "estimate_mode"} },

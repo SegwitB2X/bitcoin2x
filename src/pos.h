@@ -27,6 +27,7 @@ bool IsInitialBlockDownload();
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock);
 bool IsCompressedOrUncompressedPubKey(const valtype &vchPubKey);
+bool IsLowDERSignature(const valtype &vchSig, ScriptError* serror, bool haveHashType);
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group
@@ -51,9 +52,13 @@ bool CreatePoSBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet);
 /** Generate a new block, without valid proof-of-work */
 void StakeB2X(bool fStake, CWallet *pwallet);
 
+bool IsCanonicalBlockSignature(const CBlock& block);
 bool CheckBlockSignature(const CBlock& block);
 
 uint256 ComputeStakeModifierV2(const CBlockIndex* pindexPrev, const uint256& kernel);
+
+
+uint256 GetStakeHashProof(const COutPoint& prevout, uint32_t nStakeTime, uint32_t nPrevTime, uint256 nStakeModifier);
 
 // Check whether stake kernel meets hash target
 // Sets hashProofOfStake on success return
