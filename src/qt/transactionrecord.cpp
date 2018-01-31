@@ -17,6 +17,8 @@
  */
 bool TransactionRecord::showTransaction(const CWalletTx &wtx)
 {
+    if ((wtx.IsCoinBase() || wtx.IsCoinStake()) && !wtx.IsInMainChain())
+        return false;
     // There are currently no cases where we hide transactions, but
     // we may want to use this in the future for things like RBF.
     return true;
