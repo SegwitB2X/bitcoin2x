@@ -26,7 +26,7 @@ bool CBlockHeader::IsBitcoinX() const
 
 bool CBlockHeader::IsPoS() const
 {
-    return nVersion & VERSIONBITS_POS;
+    return IsBitcoinX() && nVersion & VERSIONBITS_POS;
 }
 
 std::string CBlock::ToString() const

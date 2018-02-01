@@ -3183,10 +3183,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
     if (block.IsProofOfStake()) {
-        // // Coinbase output should be empty if proof-of-stake block
-        // if (block.vtx[0]->vout.size() != 1)
-        //     return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "multiple coinbase outputs in proof-of-stake block");
-
         // Second transaction must be coinstake, the rest must not be
         if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
             return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "second tx is not coinstake");

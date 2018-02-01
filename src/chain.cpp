@@ -177,5 +177,5 @@ bool CBlockIndex::IsBitcoinX() const
 
 bool CBlockIndex::IsProofOfStake() const
 {
-    return nVersion & VERSIONBITS_POS;
+    return IsBitcoinX() && nVersion & VERSIONBITS_POS;
 }
