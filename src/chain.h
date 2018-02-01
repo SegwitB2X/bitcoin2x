@@ -384,11 +384,10 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, pnext=%p, nHeight=%d, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, hashProof=%s, prevoutStake=(%s), merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(pprev=%p, pnext=%p, nHeight=%d, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, prevoutStake=(%s), merkle=%s, hashBlock=%s)",
             pprev, pnext, nHeight,
             GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
             bnStakeModifierV2.ToString(),
-            hashProof.ToString(),
             prevoutStake.ToString(),
             hashMerkleRoot.ToString(),
             GetBlockHash().ToString());
@@ -473,12 +472,12 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(bnStakeModifierV2);
+        READWRITE(hashProof);
 
         if (IsProofOfStake()) {
             READWRITE(nFlags);
-            READWRITE(bnStakeModifierV2);
             READWRITE(prevoutStake);
-            READWRITE(hashProof);
             READWRITE(vchBlockSig);
         }
     }
