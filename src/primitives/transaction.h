@@ -149,17 +149,6 @@ public:
         READWRITE(scriptPubKey);
     }
 
-    void SetEmpty()
-    {
-        nValue = 0;
-        scriptPubKey.clear();
-    }
-
-    bool IsEmpty() const
-    {
-        return (nValue == 0 && scriptPubKey.empty());
-    }	
-
     void SetNull()
     {
         nValue = -1;
@@ -277,13 +266,13 @@ class CTransaction
 public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
+    static const int32_t POS_TX_VERSION=3;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=2;
-
+    static const int32_t MAX_STANDARD_VERSION=3;
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
     // actually immutable; deserialization and assignment are implemented,
@@ -349,7 +338,7 @@ public:
     bool IsCoinStake() const
     {
         // ppcoin: the coin stake transaction is marked with the first output empty
-        return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && vout[0].IsEmpty());
+        return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && nVersion == 3);
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)

@@ -3235,9 +3235,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint32_t nBits, uint32_
     tx.vout.clear();
 
     // Mark coin stake transaction
-    CScript scriptEmpty;
-    scriptEmpty.clear();
-    tx.vout.push_back(CTxOut(0, scriptEmpty));
+    tx.nVersion = CTransaction::POS_TX_VERSION;
 
     // Choose coins to use
     CAmount nBalance = GetBalance();

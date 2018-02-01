@@ -620,8 +620,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 fSpendsCoinbase = true;
                 break;
             }
-            if (coin.out.IsEmpty())
-                return state.DoS(1, error("ConnectInputs() : special marker is not spendable"), REJECT_INVALID, "bad-txns-not-spendable");
         }
 
         CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, chainActive.Height(),
@@ -3178,18 +3176,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
+    for (unsigned int i = 1; i < block.vtx.size(); i++) {
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
-
-    if (block.IsProofOfStake()) {
-        // Second transaction must be coinstake, the rest must not be
-        if (block.vtx.empty() || !block.vtx[1]->IsCoinStake())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "second tx is not coinstake");
-        for (unsigned int i = 2; i < block.vtx.size(); i++)
-            if (block.vtx[i]->IsCoinStake())
-                return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
+        if (i != 1 && block.vtx[i]->IsCoinStake())
+            return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
     }
+
     // Check proof-of-stake block signature
     if (!CheckBlockSignature(block))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
