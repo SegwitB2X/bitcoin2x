@@ -243,7 +243,7 @@ public:
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
         consensus.premineValue = 2000000 * COIN;
 
-        consensus.posHeight = 1200000;
+        consensus.posHeight = 1200500;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
