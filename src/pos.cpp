@@ -60,7 +60,7 @@ void ThreadStakeMiner(CWallet *pwallet)
             MilliSleep(10000);
         }
 
-        while ((chainActive.Height() + 1) % 10 || chainActive.Height() < Params().GetConsensus().posHeight) {
+        while ((chainActive.Height() + 1) % 10 || (chainActive.Height() < Params().GetConsensus().posHeight)) {
             LogPrint(BCLog::STAKE, "%s: Waiting for PoS\n", __func__);
             MilliSleep(10000);
         }
@@ -181,7 +181,7 @@ bool CheckBlockSignature(const CBlock& block)
     if (!IsCanonicalBlockSignature(block))
         return false;
 
-    const CTxOut& txout = block.vtx[1]->vout[1];
+    const CTxOut& txout = block.vtx[1]->vout[0];
 
     if (!Solver(txout.scriptPubKey, whichType, vSolutions))
         return false;

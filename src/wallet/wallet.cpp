@@ -3323,7 +3323,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint32_t nBits, uint32_
     for (auto& pcoin : setCoins) {
         // Attempt to add more inputs
         // Only add coins of the same key/address as kernel
-        if (tx.vout.size() == 2 && ((pcoin.first->tx->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->tx->vout[pcoin.second].scriptPubKey == tx.vout[1].scriptPubKey))
+        if (tx.vout.size() == 2 && ((pcoin.first->tx->vout[pcoin.second].scriptPubKey == scriptPubKeyKernel || pcoin.first->tx->vout[pcoin.second].scriptPubKey == tx.vout[0].scriptPubKey))
             && pcoin.first->tx->GetHash() != tx.vin[0].prevout.hash) {
             // Stop adding more inputs if already too many inputs
             if (tx.vin.size() >= 100)
@@ -3342,14 +3342,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint32_t nBits, uint32_
     }
 
     if (nCredit >= GetStakeSplitThreshold())
-        tx.vout.push_back(CTxOut(0, tx.vout[1].scriptPubKey)); //split stake
+        tx.vout.push_back(CTxOut(0, tx.vout[0].scriptPubKey)); //split stake
 
     // Set output amount
-    if (tx.vout.size() == 3) {
-        tx.vout[1].nValue = (nCredit / 2 / CENT) * CENT;
-        tx.vout[2].nValue = nCredit - tx.vout[1].nValue;
+    if (tx.vout.size() == 2) {
+        tx.vout[0].nValue = (nCredit / 2 / CENT) * CENT;
+        tx.vout[1].nValue = nCredit - tx.vout[0].nValue;
     } else
-    tx.vout[1].nValue = nCredit;
+    tx.vout[0].nValue = nCredit;
 
     // Sign
     int nIn = 0;
