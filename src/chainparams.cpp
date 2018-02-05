@@ -245,7 +245,7 @@ public:
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
         consensus.premineValue = 2000000 * COIN;
 
-        consensus.posHeight = 1200500;
+        consensus.posHeight = 1200120;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -288,11 +288,11 @@ public:
         fMineBlocksOnDemand = false;
 
 
-        checkpointData = (CCheckpointData) {
-            {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
-            }
-        };
+        // checkpointData = (CCheckpointData) {
+        //     {
+        //         {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+        //     }
+        // };
 
         chainTxData = ChainTxData{
             // Data as of block 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c (height 1156179)

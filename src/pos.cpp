@@ -60,7 +60,7 @@ void ThreadStakeMiner(CWallet *pwallet)
             MilliSleep(10000);
         }
 
-        while ((chainActive.Height() + 1) % 10) {
+        while ((chainActive.Height() + 1) % 10 || chainActive.Height() < Params().GetConsensus().posHeight) {
             LogPrint(BCLog::STAKE, "%s: Waiting for PoS\n", __func__);
             MilliSleep(10000);
         }
