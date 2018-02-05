@@ -35,9 +35,11 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     bool isNextPoS = !((pindexLast->nHeight + 1) % 10);
     bool isPoSPeriod = (pindexLast->nHeight) > params.posHeight;
 
+    auto limit = isNextPoS ? params.posLimit : params.powLimit;
+
     if (BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin || 
         (isPoSPeriod && isNextPoS && (BlockLastSolved->nHeight - params.posHeight) / 10 < PastBlocksMin)) {
-        return UintToArith256(params.powLimit).GetCompact();
+        return UintToArith256(limit).GetCompact();
     }
 
 
@@ -82,8 +84,8 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     bnNew *= nActualTimespan;
     bnNew /= _nTargetTimespan;
 
-    if (bnNew > UintToArith256(params.powLimit)){
-        bnNew = UintToArith256(params.powLimit);
+    if (bnNew > UintToArith256(limit)){
+        bnNew = UintToArith256(limit);
     }
 
     return bnNew.GetCompact();
