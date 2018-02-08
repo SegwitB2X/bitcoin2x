@@ -207,7 +207,7 @@ public:
         consensus.posLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2.5 * 60;
-        consensus.nPosTargetSpacing = consensus.nPowTargetSpacing * 9 + 60;
+        consensus.nPosTargetSpacing = 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;

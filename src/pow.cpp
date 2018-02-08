@@ -20,6 +20,10 @@ const CBlockIndex* GetPrevPoS(const CBlockIndex* pindexLast, const Consensus::Pa
     return cur->nHeight > params.posHeight ? cur : nullptr;
 }
 
+int GetBlockSpacing(const CBlockIndex* pindex) {
+    return pindex->pprev != nullptr ? pindex->GetBlockTime() - pindex->pprev->GetBlockTime() : 0;
+}
+
 static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params, bool isHardfork) {
     /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
     if (pindexLast == nullptr) return UintToArith256(params.powLimit).GetCompact();
@@ -42,7 +46,6 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
         return UintToArith256(limit).GetCompact();
     }
 
-
     if (isPoSPeriod && isNextPoS) {BlockLastSolved = GetPrevPoS(pindexLast, params); }
     const CBlockIndex *BlockReading = BlockLastSolved;
     
@@ -58,12 +61,7 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
         }
 
         if (isPoSPeriod) {
-            if (isNextPoS) {
-                auto prevPoS = GetPrevPoS(BlockReading->pprev, params);
-                nActualTimespan += prevPoS != nullptr ? prevPoS->GetBlockTime() - prevPoS->pprev->GetBlockTime() : 0;    
-            } else {
-                nActualTimespan += BlockReading->GetBlockTime() - BlockReading->pprev->GetBlockTime();
-            }
+            nActualTimespan += GetBlockSpacing(BlockReading);
         } else {
             nActualTimespan += LastBlockTime > 0 ? LastBlockTime - BlockReading->GetBlockTime() : 0;
             LastBlockTime = BlockReading->GetBlockTime();
