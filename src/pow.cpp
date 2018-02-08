@@ -57,11 +57,18 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
             PastDifficultyAveragePrev = PastDifficultyAverage;
         }
 
-        if(LastBlockTime > 0){
-            int64_t Diff = (LastBlockTime - BlockReading->GetBlockTime());
-            nActualTimespan += Diff;
+        if (isPoSPeriod) {
+            if (isNextPoS) {
+                auto prevPoS = GetPrevPoS(BlockReading->pprev, params);
+                nActualTimespan += prevPoS != nullptr ? prevPoS->GetBlockTime() - prevPoS->pprev->GetBlockTime() : 0;    
+            } else {
+                nActualTimespan += BlockReading->GetBlockTime() - BlockReading->pprev->GetBlockTime();
+            }
+        } else {
+            nActualTimespan += LastBlockTime > 0 ? LastBlockTime - BlockReading->GetBlockTime() : 0;
+            LastBlockTime = BlockReading->GetBlockTime();
+            if (BlockReading->pprev == nullptr) { break; }
         }
-        LastBlockTime = BlockReading->GetBlockTime();
 
         if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
         BlockReading = isPoSPeriod ? 
