@@ -1844,19 +1844,27 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
 
-    if (chainActive.Height() < chainparams.GetConsensus().posHeight && block.IsProofOfStake())
+    if (pindex->nHeight > chainparams.GetConsensus().posHeight) {
+        if (block.IsProofOfStake()) {
+            // Check proof-of-stake block signature
+            if (!CheckBlockSignature(block))
+             return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
+        
+            if (pindex->nHeight % 10) {
+                return state.DoS(1, error("ConnectBlock(): expected PoW block on height %d", pindex->nHeight),
+                    REJECT_INVALID, "bad-expected-pos");
+            }
+            if (!block.CBlockHeader::IsProofOfStake())
+                return state.DoS(100, false, REJECT_INVALID, "bad-blk-version", true, "block structure and version are inconsistent");
+        } else {
+            if (!(pindex->nHeight % 10)) {
+                return state.DoS(1, error("ConnectBlock(): expected PoS block on height %d", pindex->nHeight),
+                    REJECT_INVALID, "bad-expected-pos");
+            }
+        }
+    } else if (block.CBlockHeader::IsProofOfStake())
         return state.DoS(100, error("ConnectBlock(): too early PoS"),
             REJECT_INVALID, "bad-blk-early-pos");
-    
-    if (pindex->nHeight > chainparams.GetConsensus().posHeight && !(pindex->nHeight % 10) && !block.IsProofOfStake()) {
-        return state.DoS(1, error("ConnectBlock(): expected PoS block on height %d", pindex->nHeight),
-            REJECT_INVALID, "bad-expected-pos");
-    }
-
-    if (pindex->nHeight % 10 && block.IsProofOfStake()) {
-        return state.DoS(1, error("ConnectBlock(): expected PoW block on height %d", pindex->nHeight),
-            REJECT_INVALID, "bad-expected-pos");
-    }
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
@@ -3145,9 +3153,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
         return false;
-        
-    if (block.IsProofOfStake() != block.CBlockHeader::IsProofOfStake())
-        return state.DoS(100, false, REJECT_INVALID, "bad-blk-version", true, "block structure and version are inconsistent");
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -3181,12 +3186,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
         if (i != 1 && block.vtx[i]->IsCoinStake())
             return state.DoS(100, false, REJECT_INVALID, "bad-cs-multiple", false, "more than one coinstake");
-    }
-
-    // Check proof-of-stake block signature
-    if (!CheckBlockSignature(block))
-        return state.DoS(100, false, REJECT_INVALID, "bad-blk-signature", false, "bad proof-of-stake block signature");
-        
+    } 
 
     // Check transactions
     for (const auto& tx : block.vtx)
