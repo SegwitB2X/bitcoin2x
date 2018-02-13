@@ -929,7 +929,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     const CKeyStore& keystore = tempKeystore;
 #endif
 
-    int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
+    int nHashType = SIGHASH_ALL | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT;
     if (request.params.size() > 3 && !request.params[3].isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},
@@ -944,10 +944,16 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             {std::string("ALL|FORKID|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
             {std::string("NONE|FORKID|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
             {std::string("SINGLE|FORKID|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
+            {std::string("ALL|FORKID|FORKID_SHIFT"), int(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT)},
+            {std::string("NONE|FORKID|FORKID_SHIFT"), int(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT)},
+            {std::string("SINGLE|FORKID|FORKID_SHIFT"), int(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT)},
+            {std::string("ALL|FORKID|FORKID_SHIFT|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY)},
+            {std::string("NONE|FORKID|FORKID_SHIFT|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY)},
+            {std::string("SINGLE|FORKID|FORKID_SHIFT|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY)},
         };
         std::string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))
-            nHashType = mapSigHashValues[strHashType] | SIGHASH_FORKID;
+            nHashType = mapSigHashValues[strHashType] | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT;
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
     }

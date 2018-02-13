@@ -122,6 +122,7 @@ public:
         consensus.premineValue = 2000000 * COIN;
 
         consensus.posHeight = 501451;
+        consensus.fidShiftHeight = 501451;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -246,6 +247,7 @@ public:
         consensus.premineValue = 2000000 * COIN;
 
         consensus.posHeight = 1200120;
+        consensus.fidShiftHeight = 1200120;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -351,6 +353,7 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.hardforkHeight = 10;
+        consensus.fidShiftHeight = 10;
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
         consensus.premineValue = 2000000 * COIN;
 

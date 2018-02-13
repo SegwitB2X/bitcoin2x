@@ -87,8 +87,8 @@ class FullBlockTest(ComparisonTestFramework):
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
             tx.vin[0].scriptSig = CScript()
             return
-        (sighash, err) = SignatureHash(spend_tx.vout[n].scriptPubKey, tx, 0, SIGHASH_ALL | SIGHASH_FORKID)
-        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign(sighash) + bytes(bytearray([(SIGHASH_ALL|SIGHASH_FORKID)]))])
+        (sighash, err) = SignatureHash(spend_tx.vout[n].scriptPubKey, tx, 0, SIGHASH_ALL | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT)
+        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign(sighash) + bytes(bytearray([(SIGHASH_ALL|SIGHASH_FORKID | SIGHASH_FORKID_SHIFT)]))])
 
     def create_and_sign_transaction(self, spend_tx, n, value, script=CScript([OP_TRUE])):
         tx = self.create_tx(spend_tx, n, value, script)
@@ -560,8 +560,8 @@ class FullBlockTest(ComparisonTestFramework):
             # second input is corresponding P2SH output from b39
             tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
-            (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL | SIGHASH_FORKID)
-            sig = self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL|SIGHASH_FORKID]))
+            (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT)
+            sig = self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT]))
             scriptSig = CScript([sig, redeem_script])
 
             tx.vin[1].scriptSig = scriptSig

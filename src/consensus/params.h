@@ -75,6 +75,7 @@ struct Params {
     std::string premineAddress;
     CAmount premineValue;
 
+    int fidShiftHeight;
     int posHeight;
 };
 } // namespace Consensus

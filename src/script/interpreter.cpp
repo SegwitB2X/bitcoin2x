@@ -183,7 +183,7 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     if (vchSig.size() == 0) {
         return false;
     }
-    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID));
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT));
     if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
         return false;
 
@@ -205,6 +205,10 @@ static void CleanupScriptCode(CScript &scriptCode,
     uint32_t nHashType = GetHashType(vchSig);
     if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID) ||
         !(nHashType & SIGHASH_FORKID)) {
+        scriptCode.FindAndDelete(CScript(vchSig));
+    }
+    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID_SHIFT) ||
+       !(nHashType & SIGHASH_FORKID_SHIFT)) {
         scriptCode.FindAndDelete(CScript(vchSig));
     }
 }
@@ -231,6 +235,14 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
         }
         if (forkIdEnabled && !usesForkId) {
             return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID);
+        }
+        bool usesForkIdS = GetHashType(vchSig) & SIGHASH_FORKID_SHIFT;
+        bool forkIdEnabledS = flags & SCRIPT_ENABLE_SIGHASH_FORKID_SHIFT;
+        if (!forkIdEnabledS && usesForkIdS) {
+            return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID_SHIFT);
+        }
+        if (forkIdEnabledS && !usesForkIdS) {
+            return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID_SHIFT);
         }
     }
     return true;
@@ -1242,7 +1254,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // Locktime
         ss << txTo.nLockTime;
         // Sighash type
-        ss << nHashType;
+        ss << (nHashType & SIGHASH_FORKID_SHIFT ? (nHashType << 1) : nHashType);
 
         return ss.GetHash();
     }
@@ -1266,7 +1278,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
-    ss << txTmp << nHashType;
+    ss << txTmp << (nHashType & SIGHASH_FORKID_SHIFT ? (nHashType << 1) : nHashType);
     return ss.GetHash();
 }
 

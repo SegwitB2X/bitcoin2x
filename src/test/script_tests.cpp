@@ -1303,12 +1303,12 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 
     BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey, true));
     BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[ALL|FORKID] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "21")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[NONE|FORKID] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "22")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[SINGLE|FORKID] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "23")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[ALL|FORKID|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "A1")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[NONE|FORKID|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "A2")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[SINGLE|FORKID|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "A3")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[ALL|FORKID|FORKID_SHIFT] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "31")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[NONE|FORKID|FORKID_SHIFT] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "32")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[SINGLE|FORKID|FORKID_SHIFT] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "33")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[ALL|FORKID|FORKID_SHIFT|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "B1")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[NONE|FORKID|FORKID_SHIFT|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "B2")) << vchPubKey, true));
+    BOOST_CHECK_EQUAL(derSig + "[SINGLE|FORKID|FORKID_SHIFT|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "B3")) << vchPubKey, true));
 
     BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
     BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));

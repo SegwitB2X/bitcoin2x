@@ -74,6 +74,12 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("ALL|FORKID|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("NONE|FORKID|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY), std::string("SINGLE|FORKID|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT), std::string("ALL|FORKID|FORKID_SHIFT")},
+    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT), std::string("NONE|FORKID|FORKID_SHIFT")},
+    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT), std::string("SINGLE|FORKID|FORKID_SHIFT")},
+    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY), std::string("ALL|FORKID|FORKID_SHIFT|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY), std::string("NONE|FORKID|FORKID_SHIFT|ANYONECANPAY")},
+    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT|SIGHASH_ANYONECANPAY), std::string("SINGLE|FORKID|FORKID_SHIFT|ANYONECANPAY")},
 };
 
 /**
@@ -108,7 +114,7 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
                     // this won't decode correctly formatted public keys in Pubkey or Multisig scripts due to
                     // the restrictions on the pubkey formats (see IsCompressedOrUncompressedPubKey) being incongruous with the
                     // checks in CheckSignatureEncoding.
-                    auto flags = SCRIPT_VERIFY_STRICTENC | SCRIPT_ENABLE_SIGHASH_FORKID;
+                    auto flags = SCRIPT_VERIFY_STRICTENC | SCRIPT_ENABLE_SIGHASH_FORKID | SCRIPT_ENABLE_SIGHASH_FORKID_SHIFT;
                     if (CheckSignatureEncoding(vch, flags, nullptr)) {
                         const unsigned char chSigHashType = vch.back();
                         if (mapSigHashTypes.count(chSigHashType)) {
