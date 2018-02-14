@@ -33,7 +33,7 @@ bool IsLowDERSignature(const valtype &vchSig, ScriptError* serror, bool haveHash
 // ratio of group interval length between the last group and the first group
 static const int MODIFIER_INTERVAL_RATIO = 3;
 static const int STAKE_TIMESTAMP_MASK = 15;
-static const int STAKE_MIN_AGE = 0; //8 hours
+static const int STAKE_MIN_AGE = 8 * 60 * 60; //8 hours
 static const bool DEFAULT_STAKING = false;
 
 extern bool fStakeRun;

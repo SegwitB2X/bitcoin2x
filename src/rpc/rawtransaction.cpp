@@ -958,7 +958,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
     }
 
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID | SIGHASH_FORKID_SHIFT )) == SIGHASH_SINGLE);
 
     // Script verification errors
     UniValue vErrors(UniValue::VARR);

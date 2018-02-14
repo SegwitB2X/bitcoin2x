@@ -198,21 +198,6 @@ static uint32_t GetHashType(const valtype &vchSig) {
     return vchSig[vchSig.size() - 1];
 }
 
-static void CleanupScriptCode(CScript &scriptCode,
-                              const std::vector<uint8_t> &vchSig,
-                              uint32_t flags) {
-    // Drop the signature in scripts when SIGHASH_FORKID is not used.
-    uint32_t nHashType = GetHashType(vchSig);
-    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID) ||
-        !(nHashType & SIGHASH_FORKID)) {
-        scriptCode.FindAndDelete(CScript(vchSig));
-    }
-    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID_SHIFT) ||
-       !(nHashType & SIGHASH_FORKID_SHIFT)) {
-        scriptCode.FindAndDelete(CScript(vchSig));
-    }
-}
-
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror) {
     // Empty signature. Not strictly DER encoded, but allowed to provide a
     // compact way to provide an invalid signature for use with CHECK(MULTI)SIG
@@ -929,7 +914,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
                     if (sigversion == SIGVERSION_BASE) {
-                        CleanupScriptCode(scriptCode, vchSig, flags);
+                        scriptCode.FindAndDelete(CScript(vchSig));
                     }
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
@@ -993,7 +978,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         if (sigversion == SIGVERSION_BASE) {
-                            CleanupScriptCode(scriptCode, vchSig, flags);
+                            scriptCode.FindAndDelete(CScript(vchSig));
                         }
                     }
 
@@ -1101,8 +1086,8 @@ public:
     CTransactionSignatureSerializer(const CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
         txTo(txToIn), scriptCode(scriptCodeIn), nIn(nInIn),
         fAnyoneCanPay(!!(nHashTypeIn & SIGHASH_ANYONECANPAY)),
-        fHashSingle((nHashTypeIn & 0x1f) == SIGHASH_SINGLE),
-        fHashNone((nHashTypeIn & 0x1f) == SIGHASH_NONE) {}
+        fHashSingle((nHashTypeIn & 0x0f) == SIGHASH_SINGLE),
+        fHashNone((nHashTypeIn & 0x0f) == SIGHASH_NONE) {}
 
     /** Serialize the passed scriptCode, skipping OP_CODESEPARATORs */
     template<typename S>
@@ -1223,14 +1208,14 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
             hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
         }
 
-        if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+        if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x0f) != SIGHASH_SINGLE && (nHashType & 0x0f) != SIGHASH_NONE) {
             hashSequence = cache ? cache->hashSequence : GetSequenceHash(txTo);
         }
 
 
-        if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+        if ((nHashType & 0x0f) != SIGHASH_SINGLE && (nHashType & 0x0f) != SIGHASH_NONE) {
             hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
-        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
+        } else if ((nHashType & 0x0f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
@@ -1266,7 +1251,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     }
 
     // Check for invalid use of SIGHASH_SINGLE
-    if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
+    if ((nHashType & 0x0f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
             //  nOut out of range
             return one;
@@ -1436,9 +1421,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     }
 
     // Scripts inside witness implicitly require cleanstack behaviour
-    if (stack.size() != 1)
-        return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-    if (!CastToBool(stack.back()))
+    if (stack.size() != 1 || !CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
 }
@@ -1466,9 +1449,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     if (!EvalScript(stack, scriptPubKey, flags, checker, SIGVERSION_BASE, serror))
         // serror is set
         return false;
-    if (stack.empty())
-        return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-    if (CastToBool(stack.back()) == false)
+    if (stack.empty() || !CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
 
     // Bare witness programs
@@ -1512,9 +1493,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         if (!EvalScript(stack, pubKey2, flags, checker, SIGVERSION_BASE, serror))
             // serror is set
             return false;
-        if (stack.empty())
-            return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-        if (!CastToBool(stack.back()))
+        if (stack.empty() || !CastToBool(stack.back()))
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
 
         // P2SH witness program

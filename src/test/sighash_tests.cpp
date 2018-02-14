@@ -43,7 +43,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     txTmp.vin[nIn].scriptSig = scriptCode;
 
     // Blank out some of the outputs
-    if ((nHashType & 0x1f) == SIGHASH_NONE)
+    if ((nHashType & 0x0f) == SIGHASH_NONE)
     {
         // Wildcard payee
         txTmp.vout.clear();
@@ -53,7 +53,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
             if (i != nIn)
                 txTmp.vin[i].nSequence = 0;
     }
-    else if ((nHashType & 0x1f) == SIGHASH_SINGLE)
+    else if ((nHashType & 0x0f) == SIGHASH_SINGLE)
     {
         // Only lock-in the txout payee at same index as txin
         unsigned int nOut = nIn;

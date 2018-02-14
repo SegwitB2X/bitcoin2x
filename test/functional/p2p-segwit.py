@@ -112,7 +112,7 @@ class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
+        self.extra_args = [["-whitelist=127.0.0.1", "-par=1"], ["-whitelist=127.0.0.1", "-par=1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1", "-par=1", "-vbparams=segwit:0:0"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -1342,7 +1342,7 @@ class SegWitTest(BitcoinTestFramework):
                     anyonecanpay = SIGHASH_ANYONECANPAY
                 hashtype = random.randint(1, 3) | anyonecanpay | SIGHASH_FORKID|SIGHASH_FORKID_SHIFT
                 sign_P2PK_witness_input(witness_program, tx, i, hashtype, temp_utxos[i].nValue, key)
-                if (hashtype == SIGHASH_SINGLE and i >= num_outputs):
+                if (hashtype == SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT and i >= num_outputs):
                     used_sighash_single_out_of_bounds = True
             tx.rehash()
             for i in range(num_outputs):
@@ -1409,7 +1409,7 @@ class SegWitTest(BitcoinTestFramework):
             tx.vin.append(CTxIn(COutPoint(i.sha256, i.n), b""))
             tx.vout.append(CTxOut(i.nValue, CScript([OP_TRUE])))
             tx.wit.vtxinwit.append(CTxInWitness())
-            sign_P2PK_witness_input(witness_program, tx, index, SIGHASH_SINGLE|SIGHASH_ANYONECANPAY|SIGHASH_FORKID, i.nValue, key)
+            sign_P2PK_witness_input(witness_program, tx, index, SIGHASH_SINGLE|SIGHASH_ANYONECANPAY|SIGHASH_FORKID|SIGHASH_FORKID_SHIFT, i.nValue, key)
             index += 1
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
