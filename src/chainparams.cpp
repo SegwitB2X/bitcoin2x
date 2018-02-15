@@ -121,8 +121,8 @@ public:
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
         consensus.premineValue = 2000000 * COIN;
 
-        consensus.posHeight = 501451;
-        consensus.fidShiftHeight = 501451;
+        consensus.posHeight = 528408;
+        consensus.fidShiftHeight = 528408;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -273,9 +273,6 @@ public:
         vSeeds.emplace_back("node1.b2x-segwit.io", true);
         vSeeds.emplace_back("node2.b2x-segwit.io", true);
         vSeeds.emplace_back("node3.b2x-segwit.io", true);
-        vSeeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch", true);
-        vSeeds.emplace_back("seed.tbtc.petertodd.org", true);
-        vSeeds.emplace_back("testnet-seed.bluematt.me", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
