@@ -3144,7 +3144,7 @@ UniValue countactiveaddresses(const JSONRPCRequest& request) {
         currentIndex = currentIndex->pprev;
     }
 
-    return UniValue(addresses.size());
+    return UniValue((uint64_t)addresses.size());
 }
 
 UniValue countaddresseswithbalance(const JSONRPCRequest& request) {
