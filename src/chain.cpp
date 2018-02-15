@@ -179,3 +179,7 @@ bool CBlockIndex::IsProofOfStake() const
 {
     return IsBitcoinX() && nVersion & VERSIONBITS_POS;
 }
+
+bool CBlockIndex::IsProofOfStakePeriod() const {
+    return IsBitcoinX() && nHeight > Consensus::Params().posHeight;
+}

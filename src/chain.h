@@ -363,6 +363,7 @@ public:
     }
 
     bool IsProofOfStake() const;
+    bool IsProofOfStakePeriod() const;
 
     unsigned int GetStakeEntropyBit() const
     {
@@ -472,13 +473,14 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(bnStakeModifierV2);
-        READWRITE(hashProof);
-
-        if (IsProofOfStake()) {
-            READWRITE(nFlags);
-            READWRITE(prevoutStake);
-            READWRITE(vchBlockSig);
+        if (IsProofOfStakePeriod()) {
+            READWRITE(bnStakeModifierV2);
+            READWRITE(hashProof);
+            if (IsProofOfStake()) {
+                READWRITE(nFlags);
+                READWRITE(prevoutStake);
+                READWRITE(vchBlockSig);
+            }
         }
     }
 
