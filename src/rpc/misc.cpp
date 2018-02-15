@@ -96,6 +96,7 @@ UniValue getinfo(const JSONRPCRequest& request)
     if (pwallet) {
         obj.push_back(Pair("walletversion", pwallet->GetVersion()));
         obj.push_back(Pair("balance",       ValueFromAmount(pwallet->GetBalance())));
+        obj.push_back(Pair("stake",         ValueFromAmount(pwallet->GetStake())));
     }
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));

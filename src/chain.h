@@ -176,6 +176,9 @@ public:
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
 
+    //! pointer to the index of the successor of this block
+    CBlockIndex* pnext;
+
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
@@ -219,6 +222,25 @@ public:
     //! (memory only) Maximum nTime in the chain upto and including this block.
     unsigned int nTimeMax;
 
+    // block signature - proof-of-stake protect the block by signing the block using a stake holder private key
+    std::vector<unsigned char> vchBlockSig;
+    
+    unsigned int nFlags;  // ppcoin: block index flags
+    enum  
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+
+    uint256 bnStakeModifierV2; // hash modifier for proof-of-stake
+
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+
+    uint256 hashProof;
+
+
     void SetNull()
     {
         phashBlock = nullptr;
@@ -234,6 +256,12 @@ public:
         nStatus = 0;
         nSequenceId = 0;
         nTimeMax = 0;
+
+        vchBlockSig.clear();
+        nFlags = 0;
+        bnStakeModifierV2 = uint256();
+        hashProof = uint256();
+        prevoutStake.SetNull();
 
         nVersion       = 0;
         hashMerkleRoot = uint256();
@@ -251,11 +279,17 @@ public:
     {
         SetNull();
 
+        nFlags = 0;
+        bnStakeModifierV2 = uint256();
+        hashProof = uint256(); 
+
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        vchBlockSig    = block.vchBlockSig;
+        prevoutStake   = block.prevoutStake;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -286,6 +320,9 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.vchBlockSig    = vchBlockSig;
+        block.prevoutStake   = prevoutStake;
+
         return block;
     }
 
@@ -320,10 +357,38 @@ public:
         return pbegin[(pend - pbegin)/2];
     }
 
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
+
+    bool IsProofOfStake() const;
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit ? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
+        return strprintf("CBlockIndex(pprev=%p, pnext=%p, nHeight=%d, nFlags=(%s)(%d)(%s), nStakeModifier=%016x, prevoutStake=(%s), merkle=%s, hashBlock=%s)",
+            pprev, pnext, nHeight,
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW",
+            bnStakeModifierV2.ToString(),
+            prevoutStake.ToString(),
             hashMerkleRoot.ToString(),
             GetBlockHash().ToString());
     }
@@ -407,6 +472,14 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(bnStakeModifierV2);
+        READWRITE(hashProof);
+
+        if (IsProofOfStake()) {
+            READWRITE(nFlags);
+            READWRITE(prevoutStake);
+            READWRITE(vchBlockSig);
+        }
     }
 
     uint256 GetBlockHash() const

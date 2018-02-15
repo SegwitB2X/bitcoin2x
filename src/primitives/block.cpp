@@ -15,13 +15,18 @@ uint256 CBlockHeader::GetHash() const
 {
     return IsBitcoinX()
         ? HashX11(BEGIN(nVersion), END(nNonce))
-        : SerializeHash(*this);
+        : Hash(BEGIN(nVersion), END(nNonce));
 }
 
 bool CBlockHeader::IsBitcoinX() const
 {
     // Time is the end of CSV deployment
     return nTime > 1493596800 && nVersion & VERSIONBITS_BITCOINX;
+}
+
+bool CBlockHeader::IsPoS() const
+{
+    return IsBitcoinX() && nVersion & VERSIONBITS_POS;
 }
 
 std::string CBlock::ToString() const

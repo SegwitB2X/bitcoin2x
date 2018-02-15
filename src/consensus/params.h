@@ -19,6 +19,7 @@ enum DeploymentPos
     DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
     DEPLOYMENT_SEGWIT, // Deployment of BIP141, BIP143, and BIP147.
     HARDFORK_BITCOINX,
+    HARDFORK_POS,
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -58,9 +59,11 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
+    uint256 posLimit;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
+    int64_t nPosTargetSpacing;
     int64_t nBtcPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t DifficultyAdjustmentInterval() const { return 1; }
@@ -71,6 +74,9 @@ struct Params {
     int hardforkHeight;
     std::string premineAddress;
     CAmount premineValue;
+
+    int fidShiftHeight;
+    int posHeight;
 };
 } // namespace Consensus
 

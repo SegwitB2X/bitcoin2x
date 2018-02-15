@@ -80,8 +80,10 @@ public:
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.posLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nPosTargetSpacing = consensus.nPowTargetSpacing * 9 + 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -105,6 +107,10 @@ public:
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000723d3581fe1bd55373540a");
 
@@ -114,6 +120,9 @@ public:
         consensus.hardforkHeight = 501451;
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
         consensus.premineValue = 2000000 * COIN;
+
+        consensus.posHeight = 501451;
+        consensus.fidShiftHeight = 501451;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -196,8 +205,10 @@ public:
         consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.posLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nPosTargetSpacing = 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -221,6 +232,10 @@ public:
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 999999999999ULL;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
 
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
 
@@ -230,6 +245,9 @@ public:
         consensus.hardforkHeight = 1200000;
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
         consensus.premineValue = 2000000 * COIN;
+
+        consensus.posHeight = 1200120;
+        consensus.fidShiftHeight = 1200120;
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -272,11 +290,11 @@ public:
         fMineBlocksOnDemand = false;
 
 
-        checkpointData = (CCheckpointData) {
-            {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
-            }
-        };
+        // checkpointData = (CCheckpointData) {
+        //     {
+        //         {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+        //     }
+        // };
 
         chainTxData = ChainTxData{
             // Data as of block 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c (height 1156179)
@@ -301,8 +319,10 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.nPosTargetSpacing = consensus.nPowTargetSpacing * 9 + 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
@@ -320,7 +340,11 @@ public:
 
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].bit = 27;
         consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nStartTime = 0;
-        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL; 
+        consensus.vDeployments[Consensus::HARDFORK_BITCOINX].nTimeout = 999999999999ULL;
+        
+        consensus.vDeployments[Consensus::HARDFORK_POS].bit = 26;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nStartTime = 999999999999ULL;
+        consensus.vDeployments[Consensus::HARDFORK_POS].nTimeout = 999999999999ULL; 
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -329,9 +353,12 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.hardforkHeight = 10;
+        consensus.fidShiftHeight = 10;
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
         consensus.premineValue = 2000000 * COIN;
 
+        consensus.posHeight = 2000;
+        
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
         pchBitcoinMessageStart[2] = 0xb5;

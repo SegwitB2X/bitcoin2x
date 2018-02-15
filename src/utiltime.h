@@ -29,4 +29,10 @@ void MilliSleep(int64_t n);
 
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
 
+static const std::string strTimestampFormat = "%Y-%m-%d %H:%M:%S UTC";
+inline std::string DateTimeStrFormat(int64_t nTime)
+{
+    return DateTimeStrFormat(strTimestampFormat.c_str(), nTime);
+}
+
 #endif // BITCOIN_UTILTIME_H

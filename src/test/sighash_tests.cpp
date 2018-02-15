@@ -43,7 +43,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     txTmp.vin[nIn].scriptSig = scriptCode;
 
     // Blank out some of the outputs
-    if ((nHashType & 0x1f) == SIGHASH_NONE)
+    if ((nHashType & 0x0f) == SIGHASH_NONE)
     {
         // Wildcard payee
         txTmp.vout.clear();
@@ -53,7 +53,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
             if (i != nIn)
                 txTmp.vin[i].nSequence = 0;
     }
-    else if ((nHashType & 0x1f) == SIGHASH_SINGLE)
+    else if ((nHashType & 0x0f) == SIGHASH_SINGLE)
     {
         // Only lock-in the txout payee at same index as txin
         unsigned int nOut = nIn;
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     nRandomTests = 500;
     #endif
     for (int i=0; i<nRandomTests; i++) {
-        int nHashType = InsecureRand32();
+        int nHashType = InsecureRand32() & ~(SIGHASH_FORKID_SHIFT);
         CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 BOOST_AUTO_TEST_CASE(sighash_from_data)
 {
     UniValue tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
-
+    
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();

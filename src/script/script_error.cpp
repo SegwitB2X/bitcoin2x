@@ -91,6 +91,10 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Illegal use of SIGHASH_FORKID";
         case SCRIPT_ERR_MUST_USE_FORKID:
             return "Signature must use SIGHASH_FORKID";
+        case SCRIPT_ERR_ILLEGAL_FORKID_SHIFT:
+            return "Illegal use of SIGHASH_FORKID_SHIFT";
+        case SCRIPT_ERR_MUST_USE_FORKID_SHIFT:
+            return "Signature must use SIGHASH_FORKID_SHIFT";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;

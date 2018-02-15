@@ -16,6 +16,7 @@
 #include "miner.h"
 #include "net.h"
 #include "policy/fees.h"
+#include "pos.h"
 #include "pow.h"
 #include "rpc/blockchain.h"
 #include "rpc/mining.h"
@@ -105,7 +106,7 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript, CWallet* pwallet)
 {
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
@@ -123,15 +124,27 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
-        CBlock *pblock = &pblocktemplate->block;
+        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
         {
             LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+            IncrementExtraNonce(pblock.get(), chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            ++pblock->nNonce;
+
+        if (pblock->CBlockHeader::IsProofOfStake()) {
+            if (pwallet == nullptr)
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "No wallet for staking");
             --nMaxTries;
+            if (!CreatePoSBlock(pblock, *pwallet)) {
+                continue;
+            }
+        } else {
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
         }
+
+        
         if (nMaxTries == 0) {
             break;
         }
@@ -184,6 +197,26 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
 
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
+}
+
+UniValue setstaking(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+    throw std::runtime_error(
+        "setstaking\n"
+        "\nStarts or stops staking thread."
+        "\nArguments:\n"
+        "1. \"enable\"       (bool, required) Wheter to start or stop staking.\n"
+        "\nResult:\n"
+        "\nExamples:\n"
+        + HelpExampleCli("getmininginfo", "true")
+        + HelpExampleRpc("getmininginfo", "false")
+    );
+
+    for (CWalletRef pwallet : vpwallets)
+        StakeB2X(request.params[0].get_bool(), pwallet);
+
+    return "";
 }
 
 UniValue getmininginfo(const JSONRPCRequest& request)
@@ -437,11 +470,11 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+    // if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
+    //     throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
 
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+    // if (IsInitialBlockDownload())
+    //     throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -974,6 +1007,7 @@ static const CRPCCommand commands[] =
     { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","dummy"} },
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
+    { "generating",         "setstaking",             &setstaking,             true,  {"enable"} },
 
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"conf_target", "estimate_mode"} },

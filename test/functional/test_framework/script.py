@@ -823,6 +823,7 @@ class CScript(bytes):
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
+SIGHASH_FORKID_SHIFT = 0x10
 SIGHASH_FORKID = 0x20
 SIGHASH_ANYONECANPAY = 0x80
 
@@ -860,14 +861,14 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txin.scriptSig = b''
     txtmp.vin[inIdx].scriptSig = FindAndDelete(script, CScript([OP_CODESEPARATOR]))
 
-    if (hashtype & 0x1f) == SIGHASH_NONE:
+    if (hashtype & 0x0f) == SIGHASH_NONE:
         txtmp.vout = []
 
         for i in range(len(txtmp.vin)):
             if i != inIdx:
                 txtmp.vin[i].nSequence = 0
 
-    elif (hashtype & 0x1f) == SIGHASH_SINGLE:
+    elif (hashtype & 0x0f) == SIGHASH_SINGLE:
         outIdx = inIdx
         if outIdx >= len(txtmp.vout):
             return (HASH_ONE, "outIdx %d out of range (%d)" % (outIdx, len(txtmp.vout)))
@@ -888,7 +889,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         txtmp.vin.append(tmp)
 
     s = txtmp.serialize()
-    s += struct.pack(b"<I", hashtype)
+    s += struct.pack(b"<I", hashtype if hashtype & SIGHASH_FORKID_SHIFT == 0 else (hashtype << 1))
 
     hash = hash256(s)
 
@@ -910,18 +911,18 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
             serialize_prevouts += i.prevout.serialize()
         hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
 
-    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x0f) != SIGHASH_SINGLE and (hashtype & 0x0f) != SIGHASH_NONE):
         serialize_sequence = bytes()
         for i in txTo.vin:
             serialize_sequence += struct.pack("<I", i.nSequence)
         hashSequence = uint256_from_str(hash256(serialize_sequence))
 
-    if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+    if ((hashtype & 0x0f) != SIGHASH_SINGLE and (hashtype & 0x0f) != SIGHASH_NONE):
         serialize_outputs = bytes()
         for o in txTo.vout:
             serialize_outputs += o.serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
-    elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
+    elif ((hashtype & 0x0f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
         serialize_outputs = txTo.vout[inIdx].serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
 
@@ -935,6 +936,6 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
     ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
     ss += ser_uint256(hashOutputs)
     ss += struct.pack("<i", txTo.nLockTime)
-    ss += struct.pack("<I", hashtype | SIGHASH_FORKID)
+    ss += struct.pack("<I", hashtype if hashtype & SIGHASH_FORKID_SHIFT == 0 else (hashtype << 1) )
 
     return hash256(ss)

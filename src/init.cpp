@@ -189,6 +189,7 @@ void Shutdown()
     StopHTTPServer();
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
+        StakeB2X(false, pwallet);
         pwallet->Flush(false);
     }
 #endif
@@ -686,7 +687,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state, chainparams)) {
-        LogPrintf("Failed to connect best block");
+        LogPrintf("Failed to connect best block %s", state.GetRejectReason());
         StartShutdown();
     }
 
@@ -1730,6 +1731,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
+        // Mine proof-of-stake blocks in the background
+        if (!gArgs.GetBoolArg("-staking", DEFAULT_STAKING))
+            LogPrintf("Staking disabled\n");
+        else
+            StakeB2X(true, pwallet);
         pwallet->postInitProcess(scheduler);
     }
 #endif

@@ -99,6 +99,11 @@ public:
     const unsigned char* end() const { return vch + size(); }
     const unsigned char& operator[](unsigned int pos) const { return vch[pos]; }
 
+    std::vector<unsigned char> getvch() const
+    {
+        return std::vector<unsigned char>(begin(), end());
+    }
+
     //! Comparator implementation.
     friend bool operator==(const CPubKey& a, const CPubKey& b)
     {

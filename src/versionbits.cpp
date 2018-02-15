@@ -21,6 +21,10 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
     {
         /*.name =*/ "bitcoin2x",
         /*.gbt_force =*/ true,
+    },     
+    {
+        /*.name =*/ "pos",
+        /*.gbt_force =*/ true,
     }
 };
 
