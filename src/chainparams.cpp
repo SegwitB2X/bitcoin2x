@@ -121,8 +121,8 @@ public:
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
         consensus.premineValue = 2000000 * COIN;
 
-        consensus.posHeight = 528399;
-        consensus.fidShiftHeight = 528399;
+        consensus.posHeight = 528750;
+        consensus.fidShiftHeight = 528750;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
