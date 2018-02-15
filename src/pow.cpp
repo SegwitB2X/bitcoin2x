@@ -37,7 +37,7 @@ static unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consens
     arith_uint256 PastDifficultyAveragePrev;
 
     bool isNextPoS = !((pindexLast->nHeight + 1) % 10);
-    bool isPoSPeriod = (pindexLast->nHeight) > params.posHeight;
+    bool isPoSPeriod = (pindexLast->nHeight) >= params.posHeight;
 
     auto limit = isNextPoS ? params.posLimit : params.powLimit;
 

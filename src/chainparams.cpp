@@ -83,7 +83,7 @@ public:
         consensus.posLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2.5 * 60;
-        consensus.nPosTargetSpacing = consensus.nPowTargetSpacing * 9 + 60;
+        consensus.nPosTargetSpacing = 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -121,8 +121,8 @@ public:
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
         consensus.premineValue = 2000000 * COIN;
 
-        consensus.posHeight = 528408;
-        consensus.fidShiftHeight = 528408;
+        consensus.posHeight = 528399;
+        consensus.fidShiftHeight = 528399;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
