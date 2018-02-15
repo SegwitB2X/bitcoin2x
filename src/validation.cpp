@@ -1808,6 +1808,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 
 static bool UpdateHashProof(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindex, CCoinsViewCache& view)
 {
+    if (pindex->nHeight < Params().GetConsensus().fidShiftHeight) return true;
     if (pindex->IsProofOfStake()) {
         auto& prevout = block.vtx[1]->vin[0].prevout;
         if (!view.HaveCoin(prevout)) {
@@ -4377,7 +4378,7 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
         if (!WriteBlockToDisk(block, blockPos, chainparams.BitcoinMessageStart()))
             return error("%s: writing genesis block to disk failed", __func__);
         CBlockIndex *pindex = AddToBlockIndex(block);
-        pindex->hashProof = chainparams.GetConsensus().hashGenesisBlock;
+        // pindex->hashProof = chainparams.GetConsensus().hashGenesisBlock;
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos, chainparams.GetConsensus()))
             return error("%s: genesis block not accepted", __func__);
     } catch (const std::runtime_error& e) {
