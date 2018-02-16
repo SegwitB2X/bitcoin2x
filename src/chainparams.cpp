@@ -119,7 +119,7 @@ public:
 
         consensus.hardforkHeight = 501451;
         consensus.premineAddress = "18wFZB62chDhYdapBnVEXX4y9hUvWs8yRu";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         consensus.posHeight = 528750;
         consensus.fidShiftHeight = 528750;
@@ -244,7 +244,7 @@ public:
 
         consensus.hardforkHeight = 1200000;
         consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         consensus.posHeight = 1200120;
         consensus.fidShiftHeight = 1200120;
@@ -352,7 +352,7 @@ public:
         consensus.hardforkHeight = 10;
         consensus.fidShiftHeight = 10;
         consensus.premineAddress = "ms17iABVQf7RQB8iaxeXPBkFdQQjCv7CmV";
-        consensus.premineValue = 2000000 * COIN;
+        consensus.premineValue = 0;
 
         consensus.posHeight = 2000;
         
